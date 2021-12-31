@@ -1,4 +1,6 @@
 
+import linenoise
+
 proc read(str: string): string =
   str
 
@@ -14,10 +16,15 @@ proc rep(str: string): string =
 
 when isMainModule:
   while true:
-    stdout.write "user> "
-    let str = stdin.readLine
-    echo str.rep
+    let str = linenoise("user> ")
+    if str == nil:
+      break
+    if str.len != 0:
+      echo str
 
 
-  
+
+
+
+
 
