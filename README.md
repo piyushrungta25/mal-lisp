@@ -28,6 +28,11 @@ To run test for step N
 make nim-build-args='-d:release' testN
 ```
 
+Format the code with `nimpretty`
+```
+make format
+```
+
 ### Note on test suite
 
 The test suite and runner is copied unmodified from the [kanaka/mal](https://github.com/kanaka/mal/blob/master/process/guide.md#step-0-the-repl) repository.
@@ -35,8 +40,3 @@ The test suite and runner is copied unmodified from the [kanaka/mal](https://git
 ### License
 
 All the files under `tests` directory is available under the original MPL 2.0 license. Rest everything is under GLP 3.0 or later.
-
-
-
-
-
