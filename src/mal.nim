@@ -16,15 +16,10 @@ proc rep(str: string): string =
 
 when isMainModule:
   while true:
-    let str = linenoise("user> ")
-    if str == nil:
+    let line = linenoise("user> ")
+    if line == nil:
       break
-    if str.len != 0:
-      echo str
-
-
-
-
-
-
-
+    if line.len != 0:
+      linenoiseHistoryAdd(line)
+      echo rep($line)
+      linenoiseFree(line)
