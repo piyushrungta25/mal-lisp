@@ -143,6 +143,11 @@ proc readUnQuote(reader: var Reader): MalData =
     raise newException(ValueError, "bad symbol")
   result = MalData(dataType: List, data: @[symbol, reader.readForm])
 
+proc readDeref(reader: var Reader): MalData =
+  assert reader.next == "@"
+
+  let symbol = MalData(dataType: Symbol, symbol: "deref")
+  result = MalData(dataType: List, data: @[symbol, reader.readForm])
 
 
 proc readForm(reader: var Reader): MalData =
@@ -159,6 +164,8 @@ proc readForm(reader: var Reader): MalData =
       return readQuasiQuote(reader)
     of '~':
       return readUnQuote(reader)
+    of '@':
+      return readDeref(reader)
     else:
       return readAtom(reader)
 
