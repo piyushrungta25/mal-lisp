@@ -1,3 +1,5 @@
+import std/[tables, hashes]
+
 type
   Reader* = object
     tokens*: seq[string]
@@ -12,6 +14,7 @@ type
     Nil
     Symbol
     Vector
+    HashMap
   
   MalOperator* = enum
     Addition = "+"
@@ -37,3 +40,7 @@ type
           symbol*: string
       of Vector:
           items*: seq[MalData]
+      of HashMap:
+          map*: OrderedTable[MalData, MalData]
+
+proc hash*(malData: MalData): Hash =  hash(cast[int](malData.unsafeAddr))

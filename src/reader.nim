@@ -2,6 +2,7 @@ import std/re
 import std/sequtils
 import std/strutils
 import std/logging
+import std/tables
 
 import MalTypes
 
@@ -46,6 +47,21 @@ proc readVector(reader: var Reader): MalData =
     result.items.add reader.readForm
   
   assert reader.next == "]"
+
+proc readHashMap(reader: var Reader): MalData =
+  assert reader.next == "{"
+
+  var map = initOrderedTable[MalData, MalData]()
+  while reader.peek != "}":
+    let key = reader.readForm
+    let value = reader.readForm
+    if key.dataType != String:
+      raise newException(ValueError, "malformed hashMap key, string or keyword required")
+    map[key] = value
+  result = MalData(dataType: HashMap, map: map)
+
+  assert reader.next == "}"
+
 
 
 proc escape(str: string): string =
@@ -111,6 +127,8 @@ proc readForm(reader: var Reader): MalData =
       return readList(reader)
     of '[':
       return readVector(reader)
+    of '{':
+      return readHashMap(reader)
     else:
       return readAtom(reader)
 

@@ -23,10 +23,10 @@ format:
 	nimpretty $(NIM_SRCS)
 
 watch:
-	echo $(NIM_SRCS)| sed -e 's/ /\n/g' | entr -crd make build
+	echo $(NIM_SRCS)| sed -e 's/ /\n/g' | entr -ccrd make build
 
 watch\:test:
-	echo $(NIM_SRCS)| sed -e 's/ /\n/g' | entr -crd make test
+	echo $(NIM_SRCS)| sed -e 's/ /\n/g' | entr -ccrd make test
 
 
 test: test1

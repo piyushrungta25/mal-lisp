@@ -1,5 +1,5 @@
 import MalTypes
-import std/[strformat, sequtils, strutils]
+import std/[strformat, sequtils, strutils, sugar, tables]
 
 proc unescape(str: string): string = 
   for c in str:
@@ -34,5 +34,12 @@ proc pr_str*(malData: MalData): string =
             result = fmt"({malData.data.map(pr_str).join($' ')})"
         of Vector:
             result = fmt"[{malData.items.map(pr_str).join($' ')}]"
+        of HashMap:
+            let kvPairs = collect:
+                for (k, v) in malData.map.pairs:
+                    pr_str(k) & " " & pr_str(v)
+            
+            result = "{" & kvPairs.join(" ") & "}"
+
 
                 
