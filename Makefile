@@ -7,8 +7,8 @@ BIN_NAME := mal
 SRC_DIR := src
 NIM_SRCS := $(shell find $(SRC_DIR) -type f -iname "*.nim")
 
-
 TEST0 := tests/tests/step0_repl.mal
+TEST1 := tests/tests/step1_read_print.mal
 
 build:
 	nimble build $(COPTS) $(nim-build-args)
@@ -25,8 +25,10 @@ format:
 watch:
 	echo $(NIM_SRCS)| sed -e 's/ /\n/g' | entr -crd make build
 
-test: test0
+test: test0 test1
 
 test0: build
 	$(PYTHON) $(TEST_RUNNER) $(TEST_PARAMS) $(TEST0) -- ./$(BIN_NAME)
 
+test1: build
+	$(PYTHON) $(TEST_RUNNER) $(TEST_PARAMS) $(TEST1) -- ./$(BIN_NAME)
