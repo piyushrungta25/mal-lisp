@@ -120,13 +120,13 @@ proc readAtom(reader: var Reader): MalData =
 
 proc readQuote(reader: var Reader): MalData =
   assert reader.next == "'"
-  
+
   let symbol = MalData(dataType: Symbol, symbol: "quote")
   result = MalData(dataType: List, data: @[symbol, reader.readForm])
 
 proc readQuasiQuote(reader: var Reader): MalData =
   assert reader.next == "`"
-  
+
   let symbol = MalData(dataType: Symbol, symbol: "quasiquote")
   result = MalData(dataType: List, data: @[symbol, reader.readForm])
 
