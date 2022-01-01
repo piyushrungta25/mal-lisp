@@ -118,6 +118,30 @@ proc readAtom(reader: var Reader): MalData =
         return MalData(dataType: Symbol, symbol: token) # assert symbol is valid
 
 
+proc readQuote(reader: var Reader): MalData =
+  assert reader.next == "'"
+  
+  let symbol = MalData(dataType: Symbol, symbol: "quote")
+  result = MalData(dataType: List, data: @[symbol, reader.readForm])
+
+proc readQuasiQuote(reader: var Reader): MalData =
+  assert reader.next == "`"
+  
+  let symbol = MalData(dataType: Symbol, symbol: "quasiquote")
+  result = MalData(dataType: List, data: @[symbol, reader.readForm])
+
+
+
+proc readUnQuote(reader: var Reader): MalData =
+  var symbol: MalData
+  let next = reader.next
+  if next == "~":
+    symbol = MalData(dataType: Symbol, symbol: "unquote")
+  elif next == "~@":
+    symbol = MalData(dataType: Symbol, symbol: "splice-unquote")
+  else:
+    raise newException(ValueError, "bad symbol")
+  result = MalData(dataType: List, data: @[symbol, reader.readForm])
 
 
 
@@ -129,6 +153,12 @@ proc readForm(reader: var Reader): MalData =
       return readVector(reader)
     of '{':
       return readHashMap(reader)
+    of '\'':
+      return readQuote(reader)
+    of '`':
+      return readQuasiQuote(reader)
+    of '~':
+      return readUnQuote(reader)
     else:
       return readAtom(reader)
 
