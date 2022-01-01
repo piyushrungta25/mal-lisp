@@ -282,7 +282,7 @@ while t.next():
 
     if t.form == None: continue
 
-    log("TEST: %s -> [%s,%s]" % (repr(t.form), repr(t.out), t.ret), end='')
+    log("    TEST: %s -> [%s,%s]" % (repr(t.form), repr(t.out), t.ret), end='')
 
     # The repeated form is to get around an occasional OS X issue
     # where the form is repeated.

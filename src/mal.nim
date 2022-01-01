@@ -1,14 +1,19 @@
 
+import logger
 import linenoise
+import reader
+import printer
+import MalTypes
 
-proc read(str: string): string =
+
+proc read(str: string): MalData =
+  reader.readStr(str)
+
+proc eval(str: MalData): MalData =
   str
 
-proc eval(str: string): string =
-  str
-
-proc print(str: string): string =
-  str
+proc print(str: MalData): string =
+  printer.pr_str(str)
 
 proc rep(str: string): string =
   return str.read.eval.print
@@ -21,5 +26,8 @@ when isMainModule:
       break
     if line.len != 0:
       linenoiseHistoryAdd(line)
-      echo rep($line)
+      try:
+        echo rep($line)
+      except EOFError:
+        echo "Error: EOF"
       linenoiseFree(line)

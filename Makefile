@@ -25,7 +25,11 @@ format:
 watch:
 	echo $(NIM_SRCS)| sed -e 's/ /\n/g' | entr -crd make build
 
-test: test0 test1
+watch\:test:
+	echo $(NIM_SRCS)| sed -e 's/ /\n/g' | entr -crd make test
+
+
+test: test1
 
 test0: build
 	$(PYTHON) $(TEST_RUNNER) $(TEST_PARAMS) $(TEST0) -- ./$(BIN_NAME)
