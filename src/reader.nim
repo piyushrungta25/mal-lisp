@@ -22,8 +22,8 @@ proc next(reader: var Reader): string =
   inc reader.position
 
 proc sanitize(str: string): string =
-    result = str.strip(chars={' ', '\t', '\v', '\r', '\l', '\f', ','})
-    debug(str, " sanitized to ", result)
+  result = str.strip(chars = {' ', '\t', '\v', '\r', '\l', '\f', ','})
+  debug(str, " sanitized to ", result)
 
 proc tokenize(str: string): seq[string] =
   debug("tokenizing ", str)
@@ -36,7 +36,7 @@ proc readList(reader: var Reader): MalData =
   result = MalData(dataType: List)
   while reader.peek != ")":
     result.data.add reader.readForm
-  
+
   assert reader.next == ")"
 
 proc readVector(reader: var Reader): MalData =
@@ -45,7 +45,7 @@ proc readVector(reader: var Reader): MalData =
   result = MalData(dataType: Vector)
   while reader.peek != "]":
     result.items.add reader.readForm
-  
+
   assert reader.next == "]"
 
 proc readHashMap(reader: var Reader): MalData =
@@ -98,7 +98,7 @@ proc readAtom(reader: var Reader): MalData =
     of "*":
       return MalData(dataType: Operator, operator: Multiplication)
     of "/":
-        return MalData(dataType: Operator, operator: Division)
+      return MalData(dataType: Operator, operator: Division)
     of "true":
       return MalData(dataType: Boolean, value: true)
     of "false":
@@ -116,7 +116,7 @@ proc readAtom(reader: var Reader): MalData =
         return MalData(dataType: Digit, digit: parseInt(token))
       except ValueError:
         return MalData(dataType: Symbol, symbol: token) # assert symbol is valid
-        
+
 
 
 
@@ -134,7 +134,7 @@ proc readForm(reader: var Reader): MalData =
 
 
 proc readStr*(str: string): MalData =
-  var reader  = Reader(
+  var reader = Reader(
     tokens: str.tokenize,
     position: 0
   )

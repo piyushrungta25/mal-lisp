@@ -4,7 +4,7 @@ type
   Reader* = object
     tokens*: seq[string]
     position*: int
-  
+
   MalDataType* = enum
     List
     Operator
@@ -15,13 +15,13 @@ type
     Symbol
     Vector
     HashMap
-  
+
   MalOperator* = enum
     Addition = "+"
     Subtraction = "-"
     Multiplication = "*"
     Division = "/"
-  
+
   MalData* = ref object
     case dataType*: MalDataType
       of List:
@@ -31,16 +31,16 @@ type
       of Digit:
         digit*: int
       of String:
-          str*: string
+        str*: string
       of Boolean:
-          value*: bool
+        value*: bool
       of Nil:
-          discard
+        discard
       of Symbol:
-          symbol*: string
+        symbol*: string
       of Vector:
-          items*: seq[MalData]
+        items*: seq[MalData]
       of HashMap:
-          map*: OrderedTable[MalData, MalData]
+        map*: OrderedTable[MalData, MalData]
 
-proc hash*(malData: MalData): Hash =  hash(cast[int](malData.unsafeAddr))
+proc hash*(malData: MalData): Hash = hash(cast[int](malData.unsafeAddr))
