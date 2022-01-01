@@ -3,17 +3,24 @@ import std/sequtils
 import std/strutils
 import std/logging
 import std/tables
-
 import MalTypes
 
 let regex = re"""[\s,]*(~@|[\[\]{}()'`~^@]|"(?:\\.|[^\\"])*"?|;.*|[^\s\[\]{}('"`,;)]*)"""
+const STRIP_CHARS = {' ', '\t', '\v', '\r', '\l', '\f', ','}
+const COMMENT_CHAR = ';'
 
-proc readForm(reader: var Reader): MalData
+proc raiseEOF() =
+  raise newException(EOFError, "reached end of input.")
+
+type
+  Reader* = object
+    tokens*: seq[string]
+    position*: int
 
 
 proc peek(reader: Reader): string =
   if reader.position >= reader.tokens.len:
-    raise newException(EOFError, "reached end of input.")
+    raiseEOF()
   reader.tokens[reader.position]
 
 
@@ -21,13 +28,20 @@ proc next(reader: var Reader): string =
   result = reader.peek
   inc reader.position
 
+
+# forward declaration
+proc readForm(reader: var Reader): MalData
+
+
 proc sanitize(str: string): string =
-  result = str.strip(chars = {' ', '\t', '\v', '\r', '\l', '\f', ','})
-  debug(str, " sanitized to ", result)
+  str.strip(chars = STRIP_CHARS)
+
 
 proc tokenize(str: string): seq[string] =
-  debug("tokenizing ", str)
-  str.findAll(regex).filterIt(not it.startsWith(';')).map(sanitize)
+  str
+    .findAll(regex)
+    .filterIt(not it.startsWith(COMMENT_CHAR)) # filter out comments
+    .map(sanitize)
 
 
 proc readList(reader: var Reader): MalData =
@@ -39,6 +53,7 @@ proc readList(reader: var Reader): MalData =
 
   assert reader.next == ")"
 
+
 proc readVector(reader: var Reader): MalData =
   assert reader.next == "["
 
@@ -47,6 +62,7 @@ proc readVector(reader: var Reader): MalData =
     result.items.add reader.readForm
 
   assert reader.next == "]"
+
 
 proc readHashMap(reader: var Reader): MalData =
   assert reader.next == "{"
@@ -63,23 +79,22 @@ proc readHashMap(reader: var Reader): MalData =
   assert reader.next == "}"
 
 
-
 proc escape(str: string): string =
   if not (str.len >= 2 and str[0] == '\"' and str[str.len - 1] == '\"'):
-    raise newException(EOFError, "reached end of input.")
+    raiseEOF()
   let str = str[1..<str.len-1]
-  debug("stripped the quotes: ", str)
+
   var i = 0
   while i < str.len:
     if str[i] == '\\':
       if i+1 >= str.len:
-        raise newException(EOFError, "reached end of input.")
+        raiseEOF()
       if @['\"', '\\'].contains(str[i+1]):
         result &= str[i+1]
       elif str[i+1] == 'n':
         result &= char(10)
       else:
-        raise newException(EOFError, "reached end of input.")
+        raiseEOF()
       i += 2
     else:
       result &= str[i]
@@ -89,7 +104,6 @@ proc escape(str: string): string =
 
 proc readAtom(reader: var Reader): MalData =
   let token = reader.next
-  # echo "token: ", token
   case token
     of "+":
       return MalData(dataType: Operator, operator: Addition)
@@ -107,55 +121,36 @@ proc readAtom(reader: var Reader): MalData =
       return MalData(dataType: Nil)
     else:
       if token[0] == '\"':
-        debug("tryting to parse string: ", token)
         return MalData(dataType: String, str: token.escape)
-      if token[0] == ':':
-        debug("storing keyword as string with special prefix")
+      elif token[0] == ':':
         return MalData(dataType: String, str: $char(127) & token[1..^1])
       try:
         return MalData(dataType: Digit, digit: parseInt(token))
       except ValueError:
-        return MalData(dataType: Symbol, symbol: token) # assert symbol is valid
+        return MalData(dataType: Symbol, symbol: token)
 
 
-proc readQuote(reader: var Reader): MalData =
-  assert reader.next == "'"
-
-  let symbol = MalData(dataType: Symbol, symbol: "quote")
-  result = MalData(dataType: List, data: @[symbol, reader.readForm])
-
-proc readQuasiQuote(reader: var Reader): MalData =
-  assert reader.next == "`"
-
-  let symbol = MalData(dataType: Symbol, symbol: "quasiquote")
-  result = MalData(dataType: List, data: @[symbol, reader.readForm])
-
-
-
-proc readUnQuote(reader: var Reader): MalData =
-  var symbol: MalData
+proc readSpecialForms(reader: var Reader): MalData =
   let next = reader.next
-  if next == "~":
-    symbol = MalData(dataType: Symbol, symbol: "unquote")
-  elif next == "~@":
-    symbol = MalData(dataType: Symbol, symbol: "splice-unquote")
-  else:
-    raise newException(ValueError, "bad symbol")
-  result = MalData(dataType: List, data: @[symbol, reader.readForm])
+  var symbol = case next
+    of "'": "quote"
+    of "~": "unquote"
+    of "~@": "splice-unquote"
+    of "`": "quasiquote"
+    of "@": "deref"
+    else:
+      raise newException(ValueError, "bad symbol")
+  
+  result = MalData(dataType: List, data: @[MalData(dataType: Symbol, symbol: symbol), reader.readForm])
 
-proc readDeref(reader: var Reader): MalData =
-  assert reader.next == "@"
-
-  let symbol = MalData(dataType: Symbol, symbol: "deref")
-  result = MalData(dataType: List, data: @[symbol, reader.readForm])
 
 proc readWithMetadata(reader: var Reader): MalData =
   assert reader.next == "^"
 
   let symbol = MalData(dataType: Symbol, symbol: "with-meta")
-  let a = reader.readForm
-  let b = reader.readForm
-  result = MalData(dataType: List, data: @[symbol, b, a])
+  let (arg, meta)= (reader.readForm, reader.readForm)
+  
+  result = MalData(dataType: List, data: @[symbol, meta, arg])
 
 
 proc readForm(reader: var Reader): MalData =
@@ -166,14 +161,8 @@ proc readForm(reader: var Reader): MalData =
       return readVector(reader)
     of '{':
       return readHashMap(reader)
-    of '\'':
-      return readQuote(reader)
-    of '`':
-      return readQuasiQuote(reader)
-    of '~':
-      return readUnQuote(reader)
-    of '@':
-      return readDeref(reader)
+    of '\'', '`', '~', '@':
+      return readSpecialForms(reader)
     of '^':
       return readWithMetadata(reader)
     else:
@@ -181,13 +170,5 @@ proc readForm(reader: var Reader): MalData =
 
 
 proc readStr*(str: string): MalData =
-  var reader = Reader(
-    tokens: str.tokenize,
-    position: 0
-  )
-
-  # echo "Tokens: ", reader.tokens
-
+  var reader = Reader(tokens: str.tokenize)
   return readForm(reader)
-
-

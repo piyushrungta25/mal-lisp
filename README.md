@@ -33,6 +33,10 @@ Format the code with `nimpretty`
 make format
 ```
 
+Use watch target `watch` and `watch:test` to run build or test on file change respectively. Requires [`entr`](https://eradman.com/entrproject/) to be installed.
+
+Set `LOGGING` environment to enable logging. Possible values - `debug`, `all`. Eg. `LOGGING=debug make run`
+
 ### Note on test suite
 
 The test suite and runner is copied unmodified from the [kanaka/mal](https://github.com/kanaka/mal/blob/master/process/guide.md#step-0-the-repl) repository.

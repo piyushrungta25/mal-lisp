@@ -1,10 +1,6 @@
 import std/[tables, hashes]
 
 type
-  Reader* = object
-    tokens*: seq[string]
-    position*: int
-
   MalDataType* = enum
     List
     Operator

@@ -28,6 +28,6 @@ when isMainModule:
       linenoiseHistoryAdd(line)
       try:
         echo rep($line)
-      except EOFError:
-        echo "Error: EOF"
+      except Exception as e:
+        echo "Error: " & e.msg
       linenoiseFree(line)
