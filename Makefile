@@ -22,6 +22,9 @@ clean:
 format:
 	nimpretty $(NIM_SRCS)
 
+watch:
+	echo $(NIM_SRCS)| sed -e 's/ /\n/g' | entr -crd make build
+
 test: test0
 
 test0: build
