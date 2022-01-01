@@ -51,7 +51,8 @@ proc readVector(reader: var Reader): MalData =
 proc escape(str: string): string =
   if not (str.len >= 2 and str[0] == '\"' and str[str.len - 1] == '\"'):
     raise newException(EOFError, "reached end of input.")
-  let str = str[1..str.len-1]
+  let str = str[1..<str.len-1]
+  debug("stripped the quotes: ", str)
   var i = 0
   while i < str.len:
     if str[i] == '\\':
@@ -61,6 +62,8 @@ proc escape(str: string): string =
         result &= str[i+1]
       elif str[i+1] == 'n':
         result &= char(10)
+      else:
+        raise newException(EOFError, "reached end of input.")
       i += 2
     else:
       result &= str[i]
@@ -88,6 +91,7 @@ proc readAtom(reader: var Reader): MalData =
       return MalData(dataType: Nil)
     else:
       if token[0] == '\"':
+        debug("tryting to parse string: ", token)
         return MalData(dataType: String, str: token.escape)
       try:
         return MalData(dataType: Digit, digit: parseInt(token))
