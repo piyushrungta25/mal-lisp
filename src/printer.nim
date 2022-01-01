@@ -20,7 +20,10 @@ proc pr_str*(malData: MalData): string =
         of Digit:
             result = $malData.digit
         of String:
-            result = "\"" & malData.str.unescape & "\""
+            if malData.str.len > 0 and malData.str[0] == char(127):
+                result = ":" & malData.str[1..^1]
+            else:
+                result = "\"" & malData.str.unescape & "\""
         of Boolean:
             result = $malData.value
         of Nil:

@@ -93,6 +93,9 @@ proc readAtom(reader: var Reader): MalData =
       if token[0] == '\"':
         debug("tryting to parse string: ", token)
         return MalData(dataType: String, str: token.escape)
+      if token[0] == ':':
+        debug("storing keyword as string with special prefix")
+        return MalData(dataType: String, str: $char(127) & token[1..^1])
       try:
         return MalData(dataType: Digit, digit: parseInt(token))
       except ValueError:
