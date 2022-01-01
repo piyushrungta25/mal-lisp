@@ -149,6 +149,14 @@ proc readDeref(reader: var Reader): MalData =
   let symbol = MalData(dataType: Symbol, symbol: "deref")
   result = MalData(dataType: List, data: @[symbol, reader.readForm])
 
+proc readWithMetadata(reader: var Reader): MalData =
+  assert reader.next == "^"
+
+  let symbol = MalData(dataType: Symbol, symbol: "with-meta")
+  let a = reader.readForm
+  let b = reader.readForm
+  result = MalData(dataType: List, data: @[symbol, b, a])
+
 
 proc readForm(reader: var Reader): MalData =
   case reader.peek[0]
@@ -166,6 +174,8 @@ proc readForm(reader: var Reader): MalData =
       return readUnQuote(reader)
     of '@':
       return readDeref(reader)
+    of '^':
+      return readWithMetadata(reader)
     else:
       return readAtom(reader)
 
