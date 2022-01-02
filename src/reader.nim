@@ -40,8 +40,9 @@ proc sanitize(str: string): string =
 proc tokenize(str: string): seq[string] =
   str
     .findAll(regex)
-    .filterIt(not it.startsWith(COMMENT_CHAR)) # filter out comments
     .map(sanitize)
+    .filterIt(not it.startsWith(COMMENT_CHAR)) # filter out comments
+
 
 
 proc readList(reader: var Reader): MalData =
