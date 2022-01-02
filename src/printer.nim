@@ -15,8 +15,6 @@ proc unescape(str: string): string =
 
 proc pr_str*(malData: MalData): string =
   case malData.dataType
-    of Operator:
-      result = $malData.operator
     of Digit:
       result = $malData.digit
     of String:
