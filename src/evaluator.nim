@@ -36,6 +36,15 @@ proc evalAst(data: MalData): MalData =
             result = MalData(dataType: List)
             for d in data.data:
                 result.data.add eval(d)
+        of Vector:
+            result = MalData(dataType: Vector)
+            for d in data.items:
+                result.items.add eval(d)
+        of HashMap:
+            result = MalData(dataType: HashMap)
+            for (k, v) in data.map.pairs:
+                result.map[eval(k)] = eval(v)
+
         else:
             return data
 
