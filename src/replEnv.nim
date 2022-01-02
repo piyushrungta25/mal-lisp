@@ -38,7 +38,6 @@ proc division(args: varargs[MalData]): MalData =
         if i != 0 and arg.digit == 0:
             raise newException(ValueError, "division by zero")
 
-
         if i == 0: result.digit = arg.digit
         else: result.digit = int(result.digit/arg.digit)
 
