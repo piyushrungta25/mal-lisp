@@ -8,6 +8,8 @@ const KEYWORD_PREFIX* = $char(127)
 
 
 type
+  MalEnvFunctions* = proc(args: varargs[MalData]): MalData
+
   MalDataType* = enum
     List
     Digit

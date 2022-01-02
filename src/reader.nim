@@ -130,7 +130,7 @@ proc readSpecialForms(reader: var Reader): MalData =
     of "@": "deref"
     else:
       raise newException(ValueError, "bad symbol")
-  
+
   let data = @[MalData(dataType: Symbol, symbol: symbol), reader.readForm]
   result = MalData(dataType: List, data: data)
 
@@ -139,8 +139,8 @@ proc readWithMetadata(reader: var Reader): MalData =
   assert reader.next == "^"
 
   let symbol = MalData(dataType: Symbol, symbol: "with-meta")
-  let (arg, meta)= (reader.readForm, reader.readForm)
-  
+  let (arg, meta) = (reader.readForm, reader.readForm)
+
   result = MalData(dataType: List, data: @[symbol, meta, arg])
 
 
