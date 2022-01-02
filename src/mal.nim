@@ -3,6 +3,7 @@ import logger
 import linenoise
 import reader
 import printer
+import evaluator
 import MalTypes
 
 
@@ -10,7 +11,7 @@ proc read(str: string): MalData =
   reader.readStr(str)
 
 proc eval(str: MalData): MalData =
-  str
+  evaluator.eval(str)
 
 proc print(str: MalData): string =
   printer.pr_str(str)

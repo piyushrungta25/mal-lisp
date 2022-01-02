@@ -8,9 +8,10 @@ const KEYWORD_PREFIX* = $char(127)
 
 
 type
+  MalEnvFunctions* = proc(args: varargs[MalData]): MalData
+
   MalDataType* = enum
     List
-    Operator
     Digit
     String
     Boolean
@@ -19,18 +20,10 @@ type
     Vector
     HashMap
 
-  MalOperator* = enum
-    Addition = "+"
-    Subtraction = "-"
-    Multiplication = "*"
-    Division = "/"
-
   MalData* = ref object
     case dataType*: MalDataType
       of List:
         data*: seq[MalData]
-      of Operator:
-        operator*: MalOperator
       of Digit:
         digit*: int
       of String:

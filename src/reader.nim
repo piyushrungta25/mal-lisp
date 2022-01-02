@@ -103,14 +103,6 @@ proc escape(str: string): string =
 proc readAtom(reader: var Reader): MalData =
   let token = reader.next
   case token
-    of "+":
-      return MalData(dataType: Operator, operator: Addition)
-    of "-":
-      return MalData(dataType: Operator, operator: Subtraction)
-    of "*":
-      return MalData(dataType: Operator, operator: Multiplication)
-    of "/":
-      return MalData(dataType: Operator, operator: Division)
     of "true":
       return MalData(dataType: Boolean, value: true)
     of "false":
@@ -138,7 +130,7 @@ proc readSpecialForms(reader: var Reader): MalData =
     of "@": "deref"
     else:
       raise newException(ValueError, "bad symbol")
-  
+
   let data = @[MalData(dataType: Symbol, symbol: symbol), reader.readForm]
   result = MalData(dataType: List, data: data)
 
@@ -147,8 +139,8 @@ proc readWithMetadata(reader: var Reader): MalData =
   assert reader.next == "^"
 
   let symbol = MalData(dataType: Symbol, symbol: "with-meta")
-  let (arg, meta)= (reader.readForm, reader.readForm)
-  
+  let (arg, meta) = (reader.readForm, reader.readForm)
+
   result = MalData(dataType: List, data: @[symbol, meta, arg])
 
 
