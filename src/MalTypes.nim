@@ -1,5 +1,12 @@
 import std/[tables, hashes]
 
+
+const STRIP_CHARS* = {' ', '\t', '\v', '\r', '\l', '\f', ','}
+const COMMENT_CHAR* = ';'
+const NEW_LINE_CHAR* = char(10)
+const KEYWORD_PREFIX* = $char(127)
+
+
 type
   MalDataType* = enum
     List

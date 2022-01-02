@@ -7,7 +7,7 @@ proc unescape(str: string): string =
       result &= "\\\""
     elif c == '\\':
       result &= "\\\\"
-    elif c == char(10):
+    elif c == NEW_LINE_CHAR:
       result &= "\\n"
     else:
       result &= c
@@ -20,7 +20,7 @@ proc pr_str*(malData: MalData): string =
     of Digit:
       result = $malData.digit
     of String:
-      if malData.str.len > 0 and malData.str[0] == char(127):
+      if malData.str.len > 0 and $malData.str[0] == KEYWORD_PREFIX:
         result = ":" & malData.str[1..^1]
       else:
         result = "\"" & malData.str.unescape & "\""

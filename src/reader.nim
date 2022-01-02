@@ -6,8 +6,6 @@ import std/tables
 import MalTypes
 
 let regex = re"""[\s,]*(~@|[\[\]{}()'`~^@]|"(?:\\.|[^\\"])*"?|;.*|[^\s\[\]{}('"`,;)]*)"""
-const STRIP_CHARS = {' ', '\t', '\v', '\r', '\l', '\f', ','}
-const COMMENT_CHAR = ';'
 
 proc raiseEOF() =
   raise newException(EOFError, "reached end of input.")
@@ -42,7 +40,6 @@ proc tokenize(str: string): seq[string] =
     .findAll(regex)
     .map(sanitize)
     .filterIt(not it.startsWith(COMMENT_CHAR)) # filter out comments
-
 
 
 proc readList(reader: var Reader): MalData =
@@ -93,7 +90,7 @@ proc escape(str: string): string =
       if @['\"', '\\'].contains(str[i+1]):
         result &= str[i+1]
       elif str[i+1] == 'n':
-        result &= char(10)
+        result &= NEW_LINE_CHAR
       else:
         raiseEOF()
       i += 2
@@ -124,7 +121,7 @@ proc readAtom(reader: var Reader): MalData =
       if token[0] == '\"':
         return MalData(dataType: String, str: token.escape)
       elif token[0] == ':':
-        return MalData(dataType: String, str: $char(127) & token[1..^1])
+        return MalData(dataType: String, str: KEYWORD_PREFIX & token[1..^1])
       try:
         return MalData(dataType: Digit, digit: parseInt(token))
       except ValueError:
@@ -142,7 +139,8 @@ proc readSpecialForms(reader: var Reader): MalData =
     else:
       raise newException(ValueError, "bad symbol")
   
-  result = MalData(dataType: List, data: @[MalData(dataType: Symbol, symbol: symbol), reader.readForm])
+  let data = @[MalData(dataType: Symbol, symbol: symbol), reader.readForm]
+  result = MalData(dataType: List, data: data)
 
 
 proc readWithMetadata(reader: var Reader): MalData =
