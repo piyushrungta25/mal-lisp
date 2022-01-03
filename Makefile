@@ -10,6 +10,7 @@ NIM_SRCS := $(shell find $(SRC_DIR) -type f -iname "*.nim")
 TEST0 := tests/tests/step0_repl.mal
 TEST1 := tests/tests/step1_read_print.mal
 TEST2 := tests/tests/step2_eval.mal
+TEST3 := tests/tests/step3_env.mal
 
 build:
 	nimble build $(COPTS) $(nim-build-args)
@@ -30,7 +31,7 @@ watch\:test:
 	echo $(NIM_SRCS)| sed -e 's/ /\n/g' | entr -ccrd make test
 
 
-test: test2
+test: test3
 
 test0: build
 	$(PYTHON) $(TEST_RUNNER) $(TEST_PARAMS) $(TEST0) -- ./$(BIN_NAME)
@@ -40,3 +41,6 @@ test1: build
 
 test2: build
 	$(PYTHON) $(TEST_RUNNER) $(TEST_PARAMS) $(TEST2) -- ./$(BIN_NAME)
+
+test3: build
+	$(PYTHON) $(TEST_RUNNER) $(TEST_PARAMS) $(TEST3) -- ./$(BIN_NAME)
