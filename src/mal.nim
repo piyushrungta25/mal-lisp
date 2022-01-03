@@ -1,23 +1,25 @@
-
+import std/logging
 import logger
 import linenoise
 import reader
 import printer
 import evaluator
+import env
 import MalTypes
 
 
 proc read(str: string): MalData =
   reader.readStr(str)
 
-proc eval(str: MalData): MalData =
-  evaluator.eval(str)
+proc eval(str: MalData, env: ReplEnv): MalData =
+  evaluator.eval(str, env)
 
 proc print(str: MalData): string =
   printer.pr_str(str)
 
 proc rep(str: string): string =
-  return str.read.eval.print
+  let prelude = getPrelude()
+  return str.read.eval(prelude).print
 
 
 when isMainModule:
@@ -30,5 +32,5 @@ when isMainModule:
       try:
         echo rep($line)
       except Exception as e:
-        echo "Error: " & e.msg
+        error(e.msg)
       linenoiseFree(line)

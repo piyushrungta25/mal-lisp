@@ -1,14 +1,14 @@
 import std/re
 import std/sequtils
 import std/strutils
-import std/logging
 import std/tables
+
 import MalTypes
+import stringUtils
+import exceptionUtils
 
 let regex = re"""[\s,]*(~@|[\[\]{}()'`~^@]|"(?:\\.|[^\\"])*"?|;.*|[^\s\[\]{}('"`,;)]*)"""
 
-proc raiseEOF() =
-  raise newException(EOFError, "reached end of input.")
 
 type
   Reader* = object
@@ -29,10 +29,6 @@ proc next(reader: var Reader): string =
 
 # forward declaration
 proc readForm(reader: var Reader): MalData
-
-
-proc sanitize(str: string): string =
-  str.strip(chars = STRIP_CHARS)
 
 
 proc tokenize(str: string): seq[string] =
@@ -77,28 +73,6 @@ proc readHashMap(reader: var Reader): MalData =
   assert reader.next == "}"
 
 
-proc escape(str: string): string =
-  if not (str.len >= 2 and str[0] == '\"' and str[str.len - 1] == '\"'):
-    raiseEOF()
-  let str = str[1..<str.len-1]
-
-  var i = 0
-  while i < str.len:
-    if str[i] == '\\':
-      if i+1 >= str.len:
-        raiseEOF()
-      if @['\"', '\\'].contains(str[i+1]):
-        result &= str[i+1]
-      elif str[i+1] == 'n':
-        result &= NEW_LINE_CHAR
-      else:
-        raiseEOF()
-      i += 2
-    else:
-      result &= str[i]
-      i+=1
-
-
 
 proc readAtom(reader: var Reader): MalData =
   let token = reader.next
@@ -111,7 +85,7 @@ proc readAtom(reader: var Reader): MalData =
       return MalData(dataType: Nil)
     else:
       if token[0] == '\"':
-        return MalData(dataType: String, str: token.escape)
+        return MalData(dataType: String, str: stringUtils.escape(token))
       elif token[0] == ':':
         return MalData(dataType: String, str: KEYWORD_PREFIX & token[1..^1])
       try:
