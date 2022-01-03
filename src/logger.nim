@@ -5,7 +5,7 @@ import std/os
 let level = case os.getEnv("LOGGING")
   of "debug": lvlDebug
   of "all": lvlAll
-  else: lvlError
+  else: lvlInfo
 
 
 var consoleLogger* = newConsoleLogger(fmtStr = "[$levelname]: ",

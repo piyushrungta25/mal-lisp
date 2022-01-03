@@ -6,54 +6,36 @@ import exceptionUtils
 
 
 type
-  EnvKey* = MalData
-  EnvValueTypes* = enum
-    DataVal
-    FunVal
-
-  EnvValue* = ref object
-    case valType*: EnvValueTypes
-      of DataVal:
-        data*: MalData
-      of FunVal:
-        fun*: MalEnvFunctions
-
   ReplEnv* = ref object
     outer: Option[ReplEnv]
-    properties: Table[EnvKey, EnvValue]
+    properties: Table[MalData, MalData]
 
 
-proc newEnv*(): ReplEnv =
-  ReplEnv(outer: none(ReplEnv), properties: initTable[EnvKey, EnvValue]())
-
-
-proc newSymbol(str: string): MalData =
-  MalData(dataType: Symbol, symbol: str)
+proc newEnv*(outer: Option[ReplEnv] = none(ReplEnv)): ReplEnv =
+  ReplEnv(outer: outer, properties: initTable[MalData, MalData]())
 
 
 proc getPrelude*(): ReplEnv =
   result = newEnv()
   result.properties = {
-    newSymbol("+"): EnvValue(valType: FunVal, fun: addition),
-    newSymbol("-"): EnvValue(valType: FunVal, fun: subtraction),
-    newSymbol("*"): EnvValue(valType: FunVal, fun: multiplication),
-    newSymbol("/"): EnvValue(valType: FunVal, fun: division),
+    newSymbol("+"): MalData(dataType: Function, fun: addition),
+    newSymbol("-"): MalData(dataType: Function, fun: subtraction),
+    newSymbol("*"): MalData(dataType: Function, fun: multiplication),
+    newSymbol("/"): MalData(dataType: Function, fun: division),
   }.toTable
 
-proc set*(env: var ReplEnv, key: EnvKey, val: EnvValue) =
+
+proc set*(env: var ReplEnv, key: MalData, val: MalData) =
   env.properties[key] = val
 
 
-proc find*(env: ReplEnv, key: EnvKey): Option[EnvValue] =
+proc find*(env: ReplEnv, key: MalData): Option[MalData] =
   if env.properties.contains(key): return some(env.properties[key])
-
-  if env.outer.isSome:
-    return env.outer.get.find(key)
-
-  return none(EnvValue)
+  if env.outer.isSome: return env.outer.get.find(key)
+  return none(MalData)
 
 
-proc get*(env: ReplEnv, key: EnvKey): EnvValue =
+proc get*(env: ReplEnv, key: MalData): MalData =
   let valMaybe = env.find(key)
   if valMaybe.isSome: return valMaybe.get
   raiseNotFoundError($key)

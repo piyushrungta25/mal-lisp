@@ -14,6 +14,7 @@ type
     Symbol
     Vector
     HashMap
+    Function
 
   MalData* = ref object
     case dataType*: MalDataType
@@ -33,6 +34,8 @@ type
         items*: seq[MalData]
       of HashMap:
         map*: OrderedTable[MalData, MalData]
+      of Function:
+        fun*: MalEnvFunctions
 
 
 proc `$`*(malData: MalData): string =
@@ -58,10 +61,29 @@ proc `$`*(malData: MalData): string =
       let kvPairs = collect:
         for (k, v) in malData.map.pairs:
           $(k) & " " & $(v)
-
       result = "{" & kvPairs.join(" ") & "}"
+    of Function:
+      result = fmt"<fun at 0x{cast[int](malData.fun.rawProc):0x}>"
+
+
+
 
 
 
 proc hash*(malData: MalData): Hash = hash($malData)
 proc `==`*(d1, d2: MalData): bool = $d1 == $d2
+
+
+proc newSymbol*(str: string): MalData =
+  MalData(dataType: Symbol, symbol: str)
+
+proc isSym*(data: MalData): bool =
+  data.dataType == Symbol
+
+proc isDefSym*(data: MalData): bool =
+  data.isSym and data.symbol == "def!"
+
+proc isLetSym*(data: MalData): bool =
+  data.isSym and data.symbol == "let*"
+
+
