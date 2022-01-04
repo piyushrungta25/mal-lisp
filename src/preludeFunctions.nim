@@ -1,7 +1,7 @@
-import std/tables
 import MalTypes
 
-proc addition(args: varargs[MalData]): MalData =
+
+proc addition*(args: varargs[MalData]): MalData =
     result = MalData(dataType: Digit, digit: 0)
 
     for arg in args:
@@ -10,7 +10,7 @@ proc addition(args: varargs[MalData]): MalData =
         result.digit += arg.digit
 
 
-proc multiplication(args: varargs[MalData]): MalData =
+proc multiplication*(args: varargs[MalData]): MalData =
     result = MalData(dataType: Digit, digit: 1)
 
     for arg in args:
@@ -19,7 +19,7 @@ proc multiplication(args: varargs[MalData]): MalData =
         result.digit *= arg.digit
 
 
-proc subtraction(args: varargs[MalData]): MalData =
+proc subtraction*(args: varargs[MalData]): MalData =
     result = MalData(dataType: Digit)
 
     for i, arg in args:
@@ -29,7 +29,7 @@ proc subtraction(args: varargs[MalData]): MalData =
         else: result.digit -= arg.digit
 
 
-proc division(args: varargs[MalData]): MalData =
+proc division*(args: varargs[MalData]): MalData =
     result = MalData(dataType: Digit)
 
     for i, arg in args:
@@ -40,11 +40,3 @@ proc division(args: varargs[MalData]): MalData =
 
         if i == 0: result.digit = arg.digit
         else: result.digit = int(result.digit/arg.digit)
-
-
-let prelude* = {
-    "+": addition,
-    "-": subtraction,
-    "*": multiplication,
-    "/": division
-}.toTable
