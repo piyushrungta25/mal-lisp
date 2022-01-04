@@ -43,7 +43,7 @@ proc readList(reader: var Reader): MalData =
 
   result = MalData(dataType: List)
   while reader.peek != ")":
-    result.data.add reader.readForm
+    result.items.add reader.readForm
 
   assert reader.next == ")"
 
@@ -105,8 +105,8 @@ proc readSpecialForms(reader: var Reader): MalData =
     else:
       raise newException(ValueError, "bad symbol")
 
-  let data = @[MalData(dataType: Symbol, symbol: symbol), reader.readForm]
-  result = MalData(dataType: List, data: data)
+  let items = @[MalData(dataType: Symbol, symbol: symbol), reader.readForm]
+  result = MalData(dataType: List, items: items)
 
 
 proc readWithMetadata(reader: var Reader): MalData =
@@ -115,7 +115,7 @@ proc readWithMetadata(reader: var Reader): MalData =
   let symbol = MalData(dataType: Symbol, symbol: "with-meta")
   let (arg, meta) = (reader.readForm, reader.readForm)
 
-  result = MalData(dataType: List, data: @[symbol, meta, arg])
+  result = MalData(dataType: List, items: @[symbol, meta, arg])
 
 
 proc readForm(reader: var Reader): MalData =

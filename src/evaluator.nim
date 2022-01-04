@@ -12,8 +12,7 @@ proc evalAst(ast: MalData, replEnv: var ReplEnv): MalData
 
 proc createEnvBindings(replEnv: var ReplEnv, bindings: MalData) =
     let bindingList = case bindings.dataType
-        of List: bindings.data
-        of Vector: bindings.items
+        of List, Vector: bindings.items
         else: raise newException(ValueError, fmt"malfolmed `let*` expression." &
             "expected bindings to be a list or vector, found `{$bindings.dataType}`")
 
@@ -44,19 +43,19 @@ proc applyLet(bindings: MalData, exprsn: MalData,
 
 proc applyList(ast: MalData, replEnv: var ReplEnv): MalData =
     var evaled = evalAst(ast, replEnv)
-    let envVal: MalData = evaled.data[0]
+    let envVal: MalData = evaled.items[0]
     assert envVal.dataType == Function
 
-    return envVal.fun(evaled.data[1..^1])
+    return envVal.fun(evaled.items[1..^1])
 
 
 proc apply(ast: MalData, replEnv: var ReplEnv): MalData =
-    if ast.data.len == 0: return ast
+    if ast.items.len == 0: return ast
 
-    if ast.data[0].isDefSym:
-        return applyDef(ast.data[1..^1], replEnv)
-    elif ast.data[0].isLetSym:
-        return applyLet(ast.data[1], ast.data[2], replEnv)
+    if ast.items[0].isDefSym:
+        return applyDef(ast.items[1..^1], replEnv)
+    elif ast.items[0].isLetSym:
+        return applyLet(ast.items[1], ast.items[2], replEnv)
     else:
         return applyList(ast, replEnv)
 
@@ -72,7 +71,7 @@ proc evalAst(ast: MalData, replEnv: var ReplEnv): MalData =
         of Symbol:
             result = replEnv.get(ast)
         of List:
-            result = MalData(dataType: List, data: ast.data.mapIt(eval(it, replEnv)))
+            result = MalData(dataType: List, items: ast.items.mapIt(eval(it, replEnv)))
         of Vector:
             result = MalData(dataType: Vector, items: ast.items.mapIt(eval(it, replEnv)))
         of HashMap:

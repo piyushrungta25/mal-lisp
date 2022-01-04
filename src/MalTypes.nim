@@ -18,8 +18,8 @@ type
 
   MalData* = ref object
     case dataType*: MalDataType
-      of List:
-        data*: seq[MalData]
+      of List, Vector:
+        items*: seq[MalData]
       of Digit:
         digit*: int
       of String:
@@ -30,8 +30,6 @@ type
         discard
       of Symbol:
         symbol*: string
-      of Vector:
-        items*: seq[MalData]
       of HashMap:
         map*: OrderedTable[MalData, MalData]
       of Function:
@@ -54,7 +52,7 @@ proc `$`*(malData: MalData): string =
     of Symbol:
       result = malData.symbol
     of List:
-      result = fmt"({malData.data.map(`$`).join($' ')})"
+      result = fmt"({malData.items.map(`$`).join($' ')})"
     of Vector:
       result = fmt"[{malData.items.map(`$`).join($' ')}]"
     of HashMap:
