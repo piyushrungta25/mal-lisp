@@ -64,10 +64,6 @@ proc `$`*(malData: MalData): string =
       result = fmt"<fun at 0x{cast[int](malData.fun.rawProc):0x}>"
 
 
-
-
-
-
 proc hash*(malData: MalData): Hash = hash($malData)
 proc `==`*(d1, d2: MalData): bool = $d1 == $d2
 
