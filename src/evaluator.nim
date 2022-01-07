@@ -3,6 +3,7 @@ import std/tables
 import std/sequtils
 import std/options
 import MalTypes
+import boolUtils
 import env
 
 
@@ -48,6 +49,23 @@ proc applyList(ast: MalData, replEnv: var ReplEnv): MalData =
 
     return envVal.fun(evaled.items[1..^1])
 
+proc applyDo(args: seq[MalData], replEnv: var ReplEnv): MalData =
+    for arg in args:
+        result = arg.eval(replEnv)
+
+proc applyIf(args: seq[MalData], replEnv: var ReplEnv): MalData =
+    if args.len == 0:
+        raise newException(ValueError, "not enough args to `if`")
+
+    let predicate = args[0].eval(replEnv)
+
+    if predicate.isTruthy:
+        return args[1].eval(replEnv)
+
+    if args.len > 2:
+        return args[2].eval(replEnv)
+
+    return MalData(dataType: Nil)
 
 proc apply(ast: MalData, replEnv: var ReplEnv): MalData =
     if ast.items.len == 0: return ast
@@ -56,6 +74,10 @@ proc apply(ast: MalData, replEnv: var ReplEnv): MalData =
         return applyDef(ast.items[1..^1], replEnv)
     elif ast.items[0].isLetSym:
         return applyLet(ast.items[1], ast.items[2], replEnv)
+    elif ast.items[0].isDoSym:
+        return applyDo(ast.items[1..^1], replEnv)
+    elif ast.items[0].isIfSym:
+        return applyIf(ast.items[1..^1], replEnv)
     else:
         return applyList(ast, replEnv)
 
