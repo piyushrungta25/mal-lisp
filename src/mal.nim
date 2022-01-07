@@ -22,9 +22,19 @@ proc print(str: MalData): string =
 proc rep(str: string, prelude: var ReplEnv): string =
   return str.read.eval(prelude).print
 
+proc registerSelfHostedFunctions(prelude: var ReplEnv) =
+  let functions = @[
+    "(def! not (fn* (a) (if a false true)))"
+  ]
+
+
+  for fun in functions:
+    discard fun.rep(prelude)
+
 
 when isMainModule:
   var prelude = getPrelude()
+  prelude.registerSelfHostedFunctions
 
   while true:
     let inputLine = getInputLine()
