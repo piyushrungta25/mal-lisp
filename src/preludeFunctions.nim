@@ -1,6 +1,7 @@
 import std/strformat
 import std/tables
 import std/sequtils
+import std/strutils
 import MalTypes
 import printer
 
@@ -45,12 +46,6 @@ proc division(args: varargs[MalData]): MalData =
         if i == 0: result.digit = arg.digit
         else: result.digit = int(result.digit/arg.digit)
 
-proc prn(args: varargs[MalData]): MalData =
-    result = MalData(dataType: Nil)
-
-    for arg in args:
-        echo arg.pr_str
-
 
 proc equality(args: varargs[MalData]): MalData =
     if args.len != 2:
@@ -71,19 +66,17 @@ proc isEmpty(args: varargs[MalData]): MalData =
     if args.len != 1:
         raise newException(ValueError, fmt"incorrect number of args to `empty?`, expcted 1, found {args.len}")
 
-    if args[0].dataType != List:
-        raise newException(ValueError, fmt"incorrect data to `empty?`, expcted `List`, found {args[0].dataType}")
+    if not args[0].dataType.isListLike:
+        raise newException(ValueError, fmt"incorrect data to `empty?`, expcted `List/Vector`, found {args[0].dataType}")
 
-    if args[0].items.len == 0:
-        return MalData(dataType: Boolean, value: true)
-    return MalData(dataType: Boolean, value: false)
+    return MalData(dataType: Boolean, value: args[0].items.len == 0)
 
 
 proc count(args: varargs[MalData]): MalData =
     if args.len != 1:
         raise newException(ValueError, fmt"incorrect number of args to `count`, expcted 1, found {args.len}")
 
-    if args[0].dataType == List:
+    if args[0].dataType.isListLike:
       return MalData(dataType: Digit, digit: args[0].items.len)
     elif args[0].dataType == Nil:
       return MalData(dataType: Digit, digit: 0)
@@ -135,13 +128,34 @@ proc greaterThanEquals(args: varargs[MalData]): Maldata =
     return MalData(dataType: Boolean, value: res)
 
 
+proc fn_pr_str(args: varargs[MalData]): MalData =
+  let str = args.mapIt(it.pr_str(true)).join(" ")
+  return MalData(dataType: String, str: str)
+
+
+proc str(args: varargs[MalData]): MalData =
+  let fnstr = args.mapIt(it.pr_str(false)).join("")
+  return MalData(dataType: String, str: fnstr)
+
+
+proc prn(args: varargs[MalData]): MalData =
+  let fnstr = args.mapIt(it.pr_str(true)).join(" ")
+  echo fnstr
+  return MalData(dataType: Nil)
+
+
+proc println(args: varargs[MalData]): MalData =
+  let fnstr = args.mapIt(it.pr_str(false)).join(" ")
+  echo fnstr
+  return MalData(dataType: Nil)
+
+
 proc getPreludeFunction*(): Table[MalData, MalData] =
     {
       newSymbol("+"): MalData(dataType: Function, fun: addition),
       newSymbol("-"): MalData(dataType: Function, fun: subtraction),
       newSymbol("*"): MalData(dataType: Function, fun: multiplication),
       newSymbol("/"): MalData(dataType: Function, fun: division),
-      newSymbol("prn"): MalData(dataType: Function, fun: prn),
       newSymbol("="): MalData(dataType: Function, fun: equality),
       newSymbol("list"): MalData(dataType: Function, fun: list),
       newSymbol("list?"): MalData(dataType: Function, fun: isList),
@@ -151,5 +165,9 @@ proc getPreludeFunction*(): Table[MalData, MalData] =
       newSymbol(">="): MalData(dataType: Function, fun: greaterThanEquals),
       newSymbol("<"): MalData(dataType: Function, fun: lessThan),
       newSymbol("<="): MalData(dataType: Function, fun: lessThanEquals),
+      newSymbol("pr-str"): MalData(dataType: Function, fun: fn_pr_str),
+      newSymbol("str"): MalData(dataType: Function, fun: str),
+      newSymbol("prn"): MalData(dataType: Function, fun: prn),
+      newSymbol("println"): MalData(dataType: Function, fun: println),
     }.toTable
 

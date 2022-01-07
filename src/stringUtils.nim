@@ -24,7 +24,11 @@ proc sanitize*(str: string): string =
 
 
 proc escape*(str: string): string =
-  if not (str.len >= 2 and str[0] == '\"' and str[str.len - 1] == '\"'):
+  if str.len < 2:
+    raiseEOF()
+  if str.len == 2 and str[0] == '"' and str[^1] == '"':
+    return ""
+  if not (str.len > 2 and str[0] == '"' and str[^1] == '"'):
     raiseEOF()
   let str = str[1..<str.len-1]
 
@@ -33,7 +37,7 @@ proc escape*(str: string): string =
     if str[i] == '\\':
       if i+1 >= str.len:
         raiseEOF()
-      if @['\"', '\\'].contains(str[i+1]):
+      if @['"', '\\'].contains(str[i+1]):
         result &= str[i+1]
       elif str[i+1] == 'n':
         result &= NEW_LINE_CHAR
