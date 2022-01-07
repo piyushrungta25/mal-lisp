@@ -1,5 +1,8 @@
 import std/tables
 import std/options
+import std/sequtils
+import std/logging
+import std/strformat
 import preludeFunctions
 import MalTypes
 import exceptionUtils
@@ -9,20 +12,6 @@ type
   ReplEnv* = ref object
     outer: Option[ReplEnv]
     properties: Table[MalData, MalData]
-
-
-proc newEnv*(outer: Option[ReplEnv] = none(ReplEnv)): ReplEnv =
-  ReplEnv(outer: outer, properties: initTable[MalData, MalData]())
-
-
-proc getPrelude*(): ReplEnv =
-  result = newEnv()
-  result.properties = {
-    newSymbol("+"): MalData(dataType: Function, fun: addition),
-    newSymbol("-"): MalData(dataType: Function, fun: subtraction),
-    newSymbol("*"): MalData(dataType: Function, fun: multiplication),
-    newSymbol("/"): MalData(dataType: Function, fun: division),
-  }.toTable
 
 
 proc set*(env: var ReplEnv, key: MalData, val: MalData) =
@@ -39,3 +28,38 @@ proc get*(env: ReplEnv, key: MalData): MalData =
   let valMaybe = env.find(key)
   if valMaybe.isSome: return valMaybe.get
   raiseNotFoundError($key)
+
+
+proc bindEnv(env: var ReplEnv, binds: seq[MalData], exprs: seq[MalData]) =
+  var i, j: int
+
+  while i < binds.len:
+    if binds[i].isVariadicMarkerSym:
+      if i+1 >= binds.len:
+        raise newException(ValueError, "variadic arg name not definied")
+      if i+1 != binds.len - 1:
+        raise newException(ValueError, "more than one variadic arg specified")
+      let items = if j >= exprs.len: @[] else: exprs[j..^1]
+      env.set(binds[i+1], MalData(dataType: List, items: items))
+      return
+    else:
+      if j >= exprs.len: break
+      env.set(binds[i], exprs[j])
+
+    inc i
+    inc j
+
+
+
+proc newEnv*(outer: Option[ReplEnv] = none(ReplEnv),
+             binds: seq[MalData] = @[],
+             exprs: seq[MalData] = @[]): ReplEnv =
+  result = ReplEnv(outer: outer, properties: initTable[MalData, MalData]())
+  result.bindEnv(binds, exprs)
+
+
+
+proc getPrelude*(): ReplEnv =
+  result = newEnv()
+  result.properties = getPreludeFunction()
+

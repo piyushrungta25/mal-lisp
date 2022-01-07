@@ -1,4 +1,6 @@
 import std/logging
+import std/strformat
+import std/options
 import logger
 import linenoise
 import reader
@@ -18,20 +20,27 @@ proc print(str: MalData): string =
   printer.pr_str(str)
 
 proc rep(str: string, prelude: var ReplEnv): string =
-
   return str.read.eval(prelude).print
+
+proc registerSelfHostedFunctions(prelude: var ReplEnv) =
+  let functions = @[
+    "(def! not (fn* (a) (if a false true)))"
+  ]
+
+
+  for fun in functions:
+    discard fun.rep(prelude)
 
 
 when isMainModule:
   var prelude = getPrelude()
+  prelude.registerSelfHostedFunctions
+
   while true:
-    let line = linenoise("user> ")
-    if line == nil:
-      break
-    if line.len != 0:
-      linenoiseHistoryAdd(line)
-      try:
-        echo rep($line, prelude)
-      except Exception as e:
-        echo e.msg
-      linenoiseFree(line)
+    let inputLine = getInputLine()
+    if inputLine.isNone: break
+
+    try:
+      echo rep(inputLine.get, prelude)
+    except Exception as e:
+      echo fmt"[ERROR] {e.msg}"
