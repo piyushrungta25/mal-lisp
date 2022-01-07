@@ -17,13 +17,7 @@ proc newEnv*(outer: Option[ReplEnv] = none(ReplEnv)): ReplEnv =
 
 proc getPrelude*(): ReplEnv =
   result = newEnv()
-  result.properties = {
-    newSymbol("+"): MalData(dataType: Function, fun: addition),
-    newSymbol("-"): MalData(dataType: Function, fun: subtraction),
-    newSymbol("*"): MalData(dataType: Function, fun: multiplication),
-    newSymbol("/"): MalData(dataType: Function, fun: division),
-  }.toTable
-
+  result.properties = getPreludeFunction()
 
 proc set*(env: var ReplEnv, key: MalData, val: MalData) =
   env.properties[key] = val
@@ -39,3 +33,4 @@ proc get*(env: ReplEnv, key: MalData): MalData =
   let valMaybe = env.find(key)
   if valMaybe.isSome: return valMaybe.get
   raiseNotFoundError($key)
+
