@@ -8,7 +8,7 @@ let level = case os.getEnv("LOGGING")
   else: lvlInfo
 
 
-var consoleLogger* = newConsoleLogger(fmtStr = "[$levelname]: ",
+var consoleLogger* = newConsoleLogger(fmtStr = "[$levelname] ",
     levelThreshold = level)
 
 addHandler(consoleLogger)
