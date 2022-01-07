@@ -111,3 +111,6 @@ proc isIfSym*(data: MalData): bool =
 proc isFnSym*(data: MalData): bool =
   data.isSym and data.symbol == "fn*"
 
+proc isVariadicMarkerSym*(data: MalData): bool =
+  data.isSym and data.symbol == "&"
+
