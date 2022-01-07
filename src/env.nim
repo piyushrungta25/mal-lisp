@@ -1,5 +1,6 @@
 import std/tables
 import std/options
+import std/sequtils
 import preludeFunctions
 import MalTypes
 import exceptionUtils
@@ -10,14 +11,6 @@ type
     outer: Option[ReplEnv]
     properties: Table[MalData, MalData]
 
-
-proc newEnv*(outer: Option[ReplEnv] = none(ReplEnv)): ReplEnv =
-  ReplEnv(outer: outer, properties: initTable[MalData, MalData]())
-
-
-proc getPrelude*(): ReplEnv =
-  result = newEnv()
-  result.properties = getPreludeFunction()
 
 proc set*(env: var ReplEnv, key: MalData, val: MalData) =
   env.properties[key] = val
@@ -33,4 +26,18 @@ proc get*(env: ReplEnv, key: MalData): MalData =
   let valMaybe = env.find(key)
   if valMaybe.isSome: return valMaybe.get
   raiseNotFoundError($key)
+
+
+proc newEnv*(outer: Option[ReplEnv] = none(ReplEnv),
+             binds: seq[MalData] = @[],
+             exprs: seq[MalData] = @[]): ReplEnv =
+  result = ReplEnv(outer: outer, properties: initTable[MalData, MalData]())
+  for (bnd, expr) in zip(binds, exprs):
+    result.set(bnd, expr)
+
+
+
+proc getPrelude*(): ReplEnv =
+  result = newEnv()
+  result.properties = getPreludeFunction()
 

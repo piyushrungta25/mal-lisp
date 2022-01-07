@@ -81,13 +81,14 @@ proc isEmpty(args: varargs[MalData]): MalData =
 
 proc count(args: varargs[MalData]): MalData =
     if args.len != 1:
-        raise newException(ValueError, fmt"incorrect number of args to `empty?`, expcted 1, found {args.len}")
+        raise newException(ValueError, fmt"incorrect number of args to `count`, expcted 1, found {args.len}")
 
-    if args[0].dataType != List:
-        raise newException(ValueError, fmt"incorrect data to `empty?`, expcted `List`, found {args[0].dataType}")
+    if args[0].dataType == List:
+      return MalData(dataType: Digit, digit: args[0].items.len)
+    elif args[0].dataType == Nil:
+      return MalData(dataType: Digit, digit: 0)
 
-
-    return MalData(dataType: Digit, digit: args[0].items.len)
+    raise newException(ValueError, fmt"incorrect data to `count`, expcted `List/Nil`, found {args[0].dataType}")
 
 
 proc lessThan(args: varargs[MalData]): Maldata =

@@ -1,4 +1,5 @@
 import std/logging
+import std/strformat
 import std/options
 import logger
 import linenoise
@@ -32,4 +33,4 @@ when isMainModule:
     try:
       echo rep(inputLine.get, prelude)
     except Exception as e:
-      echo e.msg
+      echo fmt"[ERROR] {e.msg}"

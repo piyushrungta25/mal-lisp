@@ -86,3 +86,6 @@ proc isDoSym*(data: MalData): bool =
 proc isIfSym*(data: MalData): bool =
   data.isSym and data.symbol == "if"
 
+proc isFnSym*(data: MalData): bool =
+  data.isSym and data.symbol == "fn*"
+
