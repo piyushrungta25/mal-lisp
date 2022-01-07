@@ -68,11 +68,11 @@ proc applyIf(args: seq[MalData], replEnv: var ReplEnv): MalData =
     return MalData(dataType: Nil)
 
 proc applyFn(args: seq[MalData], replEnv: ReplEnv): MalData =
-  let fnClosure = proc (exprs: varargs[MalData]): MalData =
-      var closedEnv = newEnv(some(replEnv), args[0].items, exprs.toSeq)
-      return eval(args[1], closedEnv)
+    let fnClosure = proc (exprs: varargs[MalData]): MalData =
+        var closedEnv = newEnv(some(replEnv), args[0].items, exprs.toSeq)
+        return eval(args[1], closedEnv)
 
-  return MalData(dataType: Function, fun: fnClosure)
+    return MalData(dataType: Function, fun: fnClosure)
 
 proc apply(ast: MalData, replEnv: var ReplEnv): MalData =
     if ast.items.len == 0: return ast

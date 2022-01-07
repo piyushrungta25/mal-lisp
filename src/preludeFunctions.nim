@@ -77,9 +77,9 @@ proc count(args: varargs[MalData]): MalData =
         raise newException(ValueError, fmt"incorrect number of args to `count`, expcted 1, found {args.len}")
 
     if args[0].dataType.isListLike:
-      return MalData(dataType: Digit, digit: args[0].items.len)
+        return MalData(dataType: Digit, digit: args[0].items.len)
     elif args[0].dataType == Nil:
-      return MalData(dataType: Digit, digit: 0)
+        return MalData(dataType: Digit, digit: 0)
 
     raise newException(ValueError, fmt"incorrect data to `count`, expcted `List/Nil`, found {args[0].dataType}")
 
@@ -129,25 +129,25 @@ proc greaterThanEquals(args: varargs[MalData]): Maldata =
 
 
 proc fn_pr_str(args: varargs[MalData]): MalData =
-  let str = args.mapIt(it.pr_str(true)).join(" ")
-  return MalData(dataType: String, str: str)
+    let str = args.mapIt(it.pr_str(true)).join(" ")
+    return MalData(dataType: String, str: str)
 
 
 proc str(args: varargs[MalData]): MalData =
-  let fnstr = args.mapIt(it.pr_str(false)).join("")
-  return MalData(dataType: String, str: fnstr)
+    let fnstr = args.mapIt(it.pr_str(false)).join("")
+    return MalData(dataType: String, str: fnstr)
 
 
 proc prn(args: varargs[MalData]): MalData =
-  let fnstr = args.mapIt(it.pr_str(true)).join(" ")
-  echo fnstr
-  return MalData(dataType: Nil)
+    let fnstr = args.mapIt(it.pr_str(true)).join(" ")
+    echo fnstr
+    return MalData(dataType: Nil)
 
 
 proc println(args: varargs[MalData]): MalData =
-  let fnstr = args.mapIt(it.pr_str(false)).join(" ")
-  echo fnstr
-  return MalData(dataType: Nil)
+    let fnstr = args.mapIt(it.pr_str(false)).join(" ")
+    echo fnstr
+    return MalData(dataType: Nil)
 
 
 proc getPreludeFunction*(): Table[MalData, MalData] =
