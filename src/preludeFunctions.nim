@@ -2,7 +2,6 @@ import std/strformat
 import std/tables
 import std/sequtils
 import std/strutils
-import std/logging
 import reader
 import MalTypes
 import printer
