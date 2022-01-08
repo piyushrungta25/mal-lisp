@@ -1,9 +1,13 @@
-import std/[strformat, sequtils, strutils, sugar, tables, hashes]
+import std/[strformat, sequtils, strutils, sugar, tables, hashes, options]
 import stringUtils
 
 
 type
   MalEnvFunctions* = proc(args: varargs[MalData]): MalData
+
+  ReplEnv* = ref object
+    outer*: Option[ReplEnv]
+    properties*: Table[MalData, MalData]
 
   MalDataType* = enum
     List
@@ -15,6 +19,7 @@ type
     Vector
     HashMap
     Function
+    Lambda
 
   MalData* = ref object
     case dataType*: MalDataType
@@ -34,7 +39,12 @@ type
         map*: OrderedTable[MalData, MalData]
       of Function:
         fun*: MalEnvFunctions
-
+      of Lambda:
+        expression*: MalEnvFunctions
+        fnBody*: MalData
+        parameters*: seq[MalData]
+        replEnv*: ReplEnv
+        fnClosure*: MalData
 
 
 proc toString*(malData: MalData, print_readably: bool = true): string =
@@ -66,9 +76,14 @@ proc toString*(malData: MalData, print_readably: bool = true): string =
       result = "{" & kvPairs.join(" ") & "}"
     of Function:
       result = fmt"<fun at 0x{cast[int](malData.fun.rawProc):0x}>"
+    of Lambda:
+      result = fmt"<fun at 0x{cast[int](malData.expression.rawProc):0x}>"
 
 proc isListLike*(dataType: MalDataType): bool =
   dataType == List or dataType == Vector
+
+proc isCallable*(dataType: MalDataType): bool =
+  dataType == Function or dataType == Lambda
 
 proc `$`*(malData: MalData): string = malData.toString
 proc hash*(malData: MalData): Hash = hash($malData)

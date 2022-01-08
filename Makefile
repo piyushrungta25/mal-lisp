@@ -12,12 +12,13 @@ TEST1 := tests/tests/step1_read_print.mal
 TEST2 := tests/tests/step2_eval.mal
 TEST3 := tests/tests/step3_env.mal
 TEST4 := tests/tests/step4_if_fn_do.mal
+TEST5 := tests/tests/step5_tco.mal
 
 build:
 	nimble build $(COPTS) $(nim-build-args)
 
 run: build
-	./$(BIN_NAME)
+	LOGGING=debug PERSIST_HISTORY=true ./$(BIN_NAME)
 
 clean:
 	rm -rf $(BIN_NAME) $(CACHE_DIR)
@@ -32,7 +33,7 @@ watch\:test:
 	echo $(NIM_SRCS)| sed -e 's/ /\n/g' | entr -ccrd make test
 
 
-test: test4
+test: test5
 
 test0: build
 	$(PYTHON) $(TEST_RUNNER) $(TEST_PARAMS) $(TEST0) -- ./$(BIN_NAME)
@@ -48,3 +49,6 @@ test3: build
 
 test4: build
 	$(PYTHON) $(TEST_RUNNER) $(TEST_PARAMS) $(TEST4) -- ./$(BIN_NAME)
+
+test5: build
+	$(PYTHON) $(TEST_RUNNER) $(TEST_PARAMS) $(TEST5) -- ./$(BIN_NAME)
