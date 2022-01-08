@@ -44,9 +44,14 @@ proc applyLet(bindings: MalData, exprsn: MalData, replEnv: var ReplEnv): (ReplEn
 proc applyList(ast: MalData, replEnv: var ReplEnv): MalData =
     var evaled = evalAst(ast, replEnv)
     let envVal: MalData = evaled.items[0]
-    assert envVal.dataType == Function
 
-    return envVal.fun(evaled.items[1..^1])
+    case envVal.dataType
+      of Function:
+        return envVal.fun(evaled.items[1..^1])
+      of Lambda:
+        return envVal.expression(evaled.items[1..^1])
+      else:
+        raise newException(ValueError, "first argument of list not a callable")
 
 
 proc applyDo(args: seq[MalData], replEnv: var ReplEnv): (ReplEnv, MalData) =
@@ -77,11 +82,15 @@ proc applyIf(args: seq[MalData], replEnv: var ReplEnv): (ReplEnv, MalData) =
 
 
 proc applyFn(args: seq[MalData], replEnv: ReplEnv): MalData =
-    let fnClosure = proc (exprs: varargs[MalData]): MalData =
-        var closedEnv = newEnv(some(replEnv), args[0].items, exprs.toSeq)
-        return eval(args[1], closedEnv)
+    let fnBody = args[1]
+    let parameters = args[0].items
 
-    return MalData(dataType: Function, fun: fnClosure)
+    let fnClosure = proc (arguments: varargs[MalData]): MalData =
+        var closedEnv = newEnv(some(replEnv), parameters, arguments.toSeq)
+        return eval(fnBody, closedEnv)
+
+    let closure = MalData(dataType: Lambda, expression: fnClosure)
+    return closure
 
 
 proc eval*(ast: MalData, replEnv: var ReplEnv): MalData =

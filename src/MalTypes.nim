@@ -15,6 +15,7 @@ type
     Vector
     HashMap
     Function
+    Lambda
 
   MalData* = ref object
     case dataType*: MalDataType
@@ -34,6 +35,9 @@ type
         map*: OrderedTable[MalData, MalData]
       of Function:
         fun*: MalEnvFunctions
+      of Lambda:
+        expression*: MalEnvFunctions
+
 
 
 
@@ -66,9 +70,14 @@ proc toString*(malData: MalData, print_readably: bool = true): string =
       result = "{" & kvPairs.join(" ") & "}"
     of Function:
       result = fmt"<fun at 0x{cast[int](malData.fun.rawProc):0x}>"
+    of Lambda:
+      result = fmt"<fun at 0x{cast[int](malData.expression.rawProc):0x}>"
 
 proc isListLike*(dataType: MalDataType): bool =
   dataType == List or dataType == Vector
+
+proc isCallable*(dataType: MalDataType): bool =
+  dataType == Function or dataType == Lambda
 
 proc `$`*(malData: MalData): string = malData.toString
 proc hash*(malData: MalData): Hash = hash($malData)
