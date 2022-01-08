@@ -24,7 +24,8 @@ proc rep(str: string, prelude: var ReplEnv): string =
 
 proc registerSelfHostedFunctions(prelude: var ReplEnv) =
   let functions = @[
-    "(def! not (fn* (a) (if a false true)))"
+    "(def! not (fn* (a) (if a false true)))",
+    "(def! factorial (fn* (a) (if (= a 1) 1 (* (factorial (- a 1)) a) )))"
   ]
 
 
