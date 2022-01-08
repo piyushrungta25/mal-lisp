@@ -20,6 +20,7 @@ type
     HashMap
     Function
     Lambda
+    Atom
 
   MalData* = ref object
     case dataType*: MalDataType
@@ -45,6 +46,8 @@ type
         parameters*: seq[MalData]
         replEnv*: ReplEnv
         fnClosure*: MalData
+      of Atom:
+        reference*: MalData
 
 
 proc toString*(malData: MalData, print_readably: bool = true): string =
@@ -78,6 +81,8 @@ proc toString*(malData: MalData, print_readably: bool = true): string =
       result = fmt"<fun at 0x{cast[int](malData.fun.rawProc):0x}>"
     of Lambda:
       result = fmt"<fun at 0x{cast[int](malData.expression.rawProc):0x}>"
+    of Atom:
+      result = fmt"(atom {malData.reference.toString})"
 
 proc isListLike*(dataType: MalDataType): bool =
   dataType == List or dataType == Vector
@@ -102,6 +107,7 @@ proc `==`*(d1, d2: MalData): bool =
     of Symbol: result = d1.symbol == d2.symbol
     of Function: result = d1.fun.rawProc == d2.fun.rawProc
     of HashMap: result = d1.map == d2.map
+    of Atom: result = d1.reference == d2.reference
     else: return d1.items == d2.items
 
 
