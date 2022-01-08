@@ -48,6 +48,7 @@ proc applyList(ast: MalData, replEnv: var ReplEnv): MalData =
 
     return envVal.fun(evaled.items[1..^1])
 
+
 proc applyDo(args: seq[MalData], replEnv: var ReplEnv): (ReplEnv, MalData) =
   if args.len == 0:
     raise newException(ValueError, "not enough args to `do`")
@@ -60,19 +61,20 @@ proc applyDo(args: seq[MalData], replEnv: var ReplEnv): (ReplEnv, MalData) =
   return (replEnv, args[^1])
 
 
-proc applyIf(args: seq[MalData], replEnv: var ReplEnv): MalData =
+proc applyIf(args: seq[MalData], replEnv: var ReplEnv): (ReplEnv, MalData) =
     if args.len == 0:
         raise newException(ValueError, "not enough args to `if`")
 
     let predicate = args[0].eval(replEnv)
 
     if predicate.isTruthy:
-        return args[1].eval(replEnv)
+        return (replEnv, args[1])
 
     if args.len > 2:
-        return args[2].eval(replEnv)
+        return (replEnv, args[2])
 
-    return MalData(dataType: Nil)
+    return (replEnv, MalData(dataType: Nil))
+
 
 proc applyFn(args: seq[MalData], replEnv: ReplEnv): MalData =
     let fnClosure = proc (exprs: varargs[MalData]): MalData =
@@ -98,7 +100,7 @@ proc eval*(ast: MalData, replEnv: var ReplEnv): MalData =
     elif ast.items[0].isDoSym:
       (replEnv, ast) = applyDo(ast.items[1..^1], replEnv)
     elif ast.items[0].isIfSym:
-      return applyIf(ast.items[1..^1], replEnv)
+       (replEnv, ast) = applyIf(ast.items[1..^1], replEnv)
     elif ast.items[0].isFnSym:
       return applyFn(ast.items[1..^1], replEnv)
     else:
