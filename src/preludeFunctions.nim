@@ -2,6 +2,7 @@ import std/strformat
 import std/tables
 import std/sequtils
 import std/strutils
+import reader
 import MalTypes
 import printer
 
@@ -150,6 +151,16 @@ proc println(args: varargs[MalData]): MalData =
     return MalData(dataType: Nil)
 
 
+proc read_string(args: varargs[MalData]): MalData =
+  let str = args[0].str
+  return str.readStr
+
+
+proc slurp(args: varargs[MalData]): MalData =
+  let filename = args[0].str
+  return Maldata(dataType: String, str: filename.readFile)
+
+
 proc getPreludeFunction*(): Table[MalData, MalData] =
     {
       newSymbol("+"): MalData(dataType: Function, fun: addition),
@@ -169,5 +180,7 @@ proc getPreludeFunction*(): Table[MalData, MalData] =
       newSymbol("str"): MalData(dataType: Function, fun: str),
       newSymbol("prn"): MalData(dataType: Function, fun: prn),
       newSymbol("println"): MalData(dataType: Function, fun: println),
+      newSymbol("read-string"): MalData(dataType: Function, fun: read_string),
+      newSymbol("slurp"): MalData(dataType: Function, fun: slurp),
     }.toTable
 
