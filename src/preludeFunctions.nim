@@ -2,6 +2,7 @@ import std/strformat
 import std/tables
 import std/sequtils
 import std/strutils
+import std/sugar
 import reader
 import MalTypes
 import printer
@@ -208,6 +209,27 @@ proc atomSwap(args: varargs[MalData]): MalData =
     args[0].reference = newData
     return newData
 
+proc mapListLike(args: varargs[MalData]): MalData =
+    if args.len != 2:
+        raise newException(ValueError, "exact 2 arguments required for `map`")
+    if not args[0].dataType.isCallable:
+        raise newException(ValueError, "first argument should be function type for `map`")
+    if not args[1].dataType.isListLike:
+        raise newException(ValueError, "second argument should be list/vector type for `map`")
+
+    let newItems = collect:
+        for i in args[1].items:
+            # TODO: refactor this in a invokeCallable method
+            let fn = case args[0].dataType
+                of Function: args[0].fun
+                of Lambda: args[0].fnClosure.fun
+                else: raise newException(ValueError, "map operations needs to be a function")
+            fn(@[i])
+
+    return MalData(dataType: List, items: newItems)
+
+
+
 
 proc getPreludeFunction*(): Table[MalData, MalData] =
     {
@@ -235,5 +257,8 @@ proc getPreludeFunction*(): Table[MalData, MalData] =
       newSymbol("deref"): MalData(dataType: Function, fun: atomDeref),
       newSymbol("swap!"): MalData(dataType: Function, fun: atomSwap),
       newSymbol("reset!"): MalData(dataType: Function, fun: atomReset),
+      # off the books implementation
+        newSymbol("map"): MalData(dataType: Function, fun: mapListLike),
+
     }.toTable
 

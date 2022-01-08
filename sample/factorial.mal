@@ -1,0 +1,3 @@
+(def! factorial (fn* (a) (if (= a 1) 1 (* (factorial (- a 1)) a) )))
+(prn (str (map factorial *ARGV*)))
+

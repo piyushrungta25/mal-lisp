@@ -33,6 +33,12 @@ Format the code with `nimpretty`
 make format
 ```
 
+To evalauate sample scripts
+```
+make build && ./mal sample/factorial.mal 1 2 3 4 5 6
+```
+The above should print something like `"(1 2 6 24 120 720)"`
+
 Use watch target `watch` and `watch:test` to run build or test on file change respectively. Requires [`entr`](https://eradman.com/entrproject/) to be installed.
 
 Set `LOGGING` environment to enable logging. Possible values - `debug`, `all`. Eg. `LOGGING=debug make run`
