@@ -18,7 +18,7 @@ build:
 	nimble build $(COPTS) $(nim-build-args)
 
 run: build
-	./$(BIN_NAME)
+	LOGGING=debug PERSIST_HISTORY=true ./$(BIN_NAME)
 
 clean:
 	rm -rf $(BIN_NAME) $(CACHE_DIR)
