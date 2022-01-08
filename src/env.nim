@@ -8,12 +8,6 @@ import MalTypes
 import exceptionUtils
 
 
-type
-  ReplEnv* = ref object
-    outer: Option[ReplEnv]
-    properties: Table[MalData, MalData]
-
-
 proc set*(env: var ReplEnv, key: MalData, val: MalData) =
   env.properties[key] = val
 

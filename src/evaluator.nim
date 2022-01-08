@@ -41,19 +41,6 @@ proc applyLet(bindings: MalData, exprsn: MalData, replEnv: var ReplEnv): (ReplEn
     return (ne, exprsn)
 
 
-proc applyList(ast: MalData, replEnv: var ReplEnv): MalData =
-    var evaled = evalAst(ast, replEnv)
-    let envVal: MalData = evaled.items[0]
-
-    case envVal.dataType
-      of Function:
-        return envVal.fun(evaled.items[1..^1])
-      of Lambda:
-        return envVal.expression(evaled.items[1..^1])
-      else:
-        raise newException(ValueError, "first argument of list not a callable")
-
-
 proc applyDo(args: seq[MalData], replEnv: var ReplEnv): (ReplEnv, MalData) =
   if args.len == 0:
     raise newException(ValueError, "not enough args to `do`")
@@ -85,12 +72,17 @@ proc applyFn(args: seq[MalData], replEnv: ReplEnv): MalData =
     let fnBody = args[1]
     let parameters = args[0].items
 
-    let fnClosure = proc (arguments: varargs[MalData]): MalData =
+    let closure = proc (arguments: varargs[MalData]): MalData =
         var closedEnv = newEnv(some(replEnv), parameters, arguments.toSeq)
         return eval(fnBody, closedEnv)
 
-    let closure = MalData(dataType: Lambda, expression: fnClosure)
-    return closure
+    let fnClosure = MalData(dataType: Function, fun: closure)
+    return MalData(dataType: Lambda,
+                   expression: closure,
+                   fnBody: fnBody,
+                   parameters: parameters,
+                   replEnv: replEnv,
+                   fnClosure: fnClosure)
 
 
 proc eval*(ast: MalData, replEnv: var ReplEnv): MalData =
@@ -102,18 +94,31 @@ proc eval*(ast: MalData, replEnv: var ReplEnv): MalData =
     elif ast.items.len == 0: return ast
 
     # non empty list type, apply all operations
-    if ast.items[0].isDefSym:
+    let sym = ast.items[0]
+    if sym.isDefSym:
       return applyDef(ast.items[1..^1], replEnv)
-    elif ast.items[0].isLetSym:
+    elif sym.isLetSym:
       (replEnv, ast) = applyLet(ast.items[1], ast.items[2], replEnv)
-    elif ast.items[0].isDoSym:
+    elif sym.isDoSym:
       (replEnv, ast) = applyDo(ast.items[1..^1], replEnv)
-    elif ast.items[0].isIfSym:
+    elif sym.isIfSym:
        (replEnv, ast) = applyIf(ast.items[1..^1], replEnv)
-    elif ast.items[0].isFnSym:
+    elif sym.isFnSym:
       return applyFn(ast.items[1..^1], replEnv)
     else:
-      return applyList(ast, replEnv)
+      var evaled = evalAst(ast, replEnv)
+      let envVal: MalData = evaled.items[0]
+
+      case envVal.dataType
+        of Function:
+          return envVal.fun(evaled.items[1..^1])
+        of Lambda:
+          ast = envVal.fnBody
+          replEnv = newEnv(outer = some(envVal.replEnv),
+                           binds = envVal.parameters,
+                           exprs = evaled.items[1..^1])
+        else:
+          raise newException(ValueError, "first argument of list not a callable")
 
 
 proc evalAst(ast: MalData, replEnv: var ReplEnv): MalData =

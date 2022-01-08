@@ -1,9 +1,13 @@
-import std/[strformat, sequtils, strutils, sugar, tables, hashes]
+import std/[strformat, sequtils, strutils, sugar, tables, hashes, options]
 import stringUtils
 
 
 type
   MalEnvFunctions* = proc(args: varargs[MalData]): MalData
+
+  ReplEnv* = ref object
+    outer*: Option[ReplEnv]
+    properties*: Table[MalData, MalData]
 
   MalDataType* = enum
     List
@@ -37,8 +41,10 @@ type
         fun*: MalEnvFunctions
       of Lambda:
         expression*: MalEnvFunctions
-
-
+        fnBody*: MalData
+        parameters*: seq[MalData]
+        replEnv*: ReplEnv
+        fnClosure*: MalData
 
 
 proc toString*(malData: MalData, print_readably: bool = true): string =
