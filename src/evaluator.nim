@@ -13,18 +13,17 @@ proc evalAst(ast: MalData, replEnv: var ReplEnv): MalData
 
 
 proc createEnvBindings(replEnv: var ReplEnv, bindings: MalData) =
-    let bindingList = case bindings.dataType
-        of List, Vector: bindings.items
-        else: raise newException(ValueError, fmt"malfolmed `let*` expression." &
-            "expected bindings to be a list or vector, found `{$bindings.dataType}`")
+  if not bindings.dataType.isListLike:
+    raise newException(ValueError, fmt"malfolmed `let*` expression." &
+      "expected bindings to be a list/vector, found `{$bindings.dataType}`")
 
-    if bindingList.len mod 2 != 0:
-        raise newException(ValueError, "odd number of values found in bind list")
+  if bindings.items.len mod 2 != 0:
+    raise newException(ValueError, "odd number of values found in bind list")
 
-    var i = 0
-    while i < bindingList.len:
-        replEnv.set(bindingList[i], eval(bindingList[i+1], replEnv))
-        i += 2
+  var i = 0
+  while i < bindings.items.len:
+    replEnv.set(bindings.items[i], eval(bindings.items[i+1], replEnv))
+    i += 2
 
 
 proc applyDef(args: seq[MalData], replEnv: var ReplEnv): MalData =
@@ -97,14 +96,14 @@ proc eval*(ast: MalData, replEnv: var ReplEnv): MalData =
     let sym = ast.items[0]
     if sym.isDefSym:
       return applyDef(ast.items[1..^1], replEnv)
+    elif sym.isFnSym:
+      return applyFn(ast.items[1..^1], replEnv)
     elif sym.isLetSym:
       (replEnv, ast) = applyLet(ast.items[1], ast.items[2], replEnv)
     elif sym.isDoSym:
       (replEnv, ast) = applyDo(ast.items[1..^1], replEnv)
     elif sym.isIfSym:
        (replEnv, ast) = applyIf(ast.items[1..^1], replEnv)
-    elif sym.isFnSym:
-      return applyFn(ast.items[1..^1], replEnv)
     else:
       var evaled = evalAst(ast, replEnv)
       let envVal: MalData = evaled.items[0]
