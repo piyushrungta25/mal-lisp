@@ -2,6 +2,7 @@ import std/strformat
 import std/tables
 import std/sequtils
 import std/options
+import std/logging
 import MalTypes
 import boolUtils
 import env
@@ -34,12 +35,10 @@ proc applyDef(args: seq[MalData], replEnv: var ReplEnv): MalData =
     replEnv.set(args[0], result)
 
 
-proc applyLet(bindings: MalData, exprsn: MalData,
-        replEnv: var ReplEnv): MalData =
+proc applyLet(bindings: MalData, exprsn: MalData, replEnv: var ReplEnv): (ReplEnv, MalData) =
     var ne = newEnv(some(replEnv))
-
     createEnvBindings(ne, bindings)
-    return eval(exprsn, ne)
+    return (ne, exprsn)
 
 
 proc applyList(ast: MalData, replEnv: var ReplEnv): MalData =
@@ -49,9 +48,17 @@ proc applyList(ast: MalData, replEnv: var ReplEnv): MalData =
 
     return envVal.fun(evaled.items[1..^1])
 
-proc applyDo(args: seq[MalData], replEnv: var ReplEnv): MalData =
-    for arg in args:
-        result = arg.eval(replEnv)
+proc applyDo(args: seq[MalData], replEnv: var ReplEnv): (ReplEnv, MalData) =
+  if args.len == 0:
+    raise newException(ValueError, "not enough args to `do`")
+
+  var i: int
+  while i < (args.len - 1):
+    discard args[i].eval(replEnv)
+    inc i
+
+  return (replEnv, args[^1])
+
 
 proc applyIf(args: seq[MalData], replEnv: var ReplEnv): MalData =
     if args.len == 0:
@@ -74,27 +81,28 @@ proc applyFn(args: seq[MalData], replEnv: ReplEnv): MalData =
 
     return MalData(dataType: Function, fun: fnClosure)
 
-proc apply(ast: MalData, replEnv: var ReplEnv): MalData =
-    if ast.items.len == 0: return ast
-
-    if ast.items[0].isDefSym:
-        return applyDef(ast.items[1..^1], replEnv)
-    elif ast.items[0].isLetSym:
-        return applyLet(ast.items[1], ast.items[2], replEnv)
-    elif ast.items[0].isDoSym:
-        return applyDo(ast.items[1..^1], replEnv)
-    elif ast.items[0].isIfSym:
-        return applyIf(ast.items[1..^1], replEnv)
-    elif ast.items[0].isFnSym:
-        return applyFn(ast.items[1..^1], replEnv)
-    else:
-        return applyList(ast, replEnv)
-
 
 proc eval*(ast: MalData, replEnv: var ReplEnv): MalData =
-    case ast.dataType:
-        of List: return ast.apply(replEnv)
-        else: return ast.evalAst(replEnv)
+  var ast = ast
+  var replEnv = replEnv
+
+  while true:
+    if ast.dataType != List: return ast.evalAst(replEnv)
+    elif ast.items.len == 0: return ast
+
+    # non empty list type, apply all operations
+    if ast.items[0].isDefSym:
+      return applyDef(ast.items[1..^1], replEnv)
+    elif ast.items[0].isLetSym:
+      (replEnv, ast) = applyLet(ast.items[1], ast.items[2], replEnv)
+    elif ast.items[0].isDoSym:
+      (replEnv, ast) = applyDo(ast.items[1..^1], replEnv)
+    elif ast.items[0].isIfSym:
+      return applyIf(ast.items[1..^1], replEnv)
+    elif ast.items[0].isFnSym:
+      return applyFn(ast.items[1..^1], replEnv)
+    else:
+      return applyList(ast, replEnv)
 
 
 proc evalAst(ast: MalData, replEnv: var ReplEnv): MalData =
