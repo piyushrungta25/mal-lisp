@@ -2,7 +2,6 @@ import std/strformat
 import std/tables
 import std/sequtils
 import std/options
-import std/logging
 import MalTypes
 import boolUtils
 import env

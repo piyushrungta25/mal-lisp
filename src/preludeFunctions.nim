@@ -2,6 +2,8 @@ import std/strformat
 import std/tables
 import std/sequtils
 import std/strutils
+import std/sugar
+import reader
 import MalTypes
 import printer
 
@@ -150,6 +152,85 @@ proc println(args: varargs[MalData]): MalData =
     return MalData(dataType: Nil)
 
 
+proc read_string(args: varargs[MalData]): MalData =
+    let str = args[0].str
+    return str.readStr
+
+
+proc slurp(args: varargs[MalData]): MalData =
+    let filename = args[0].str
+    return Maldata(dataType: String, str: filename.readFile)
+
+
+proc makeAtom(args: varargs[MalData]): MalData =
+    if args.len != 1:
+        raise newException(ValueError, "only one value allowed for `atom`")
+
+    return MalData(dataType: Atom, reference: args[0])
+
+
+proc isAtom(args: varargs[MalData]): MalData =
+    if args.len != 1:
+        raise newException(ValueError, "only one value allowed for `atom?`")
+    Maldata(dataType: Boolean, value: args[0].dataType == Atom)
+
+
+proc atomDeref(args: varargs[MalData]): MalData =
+    if args.len != 1:
+        raise newException(ValueError, "only one value allowed for `atom?`")
+    if args[0].dataType != Atom:
+        raise newException(ValueError, "argument should be atom type for `deref`")
+
+    return args[0].reference
+
+
+proc atomReset(args: varargs[MalData]): MalData =
+    if args.len != 2:
+        raise newException(ValueError, "only 2 arguments allowed for `reset!`")
+    if args[0].dataType != Atom:
+        raise newException(ValueError, "first argument should be atom type for `deref`")
+
+    args[0].reference = args[1]
+    return args[1]
+
+
+proc atomSwap(args: varargs[MalData]): MalData =
+    if args.len < 2:
+        raise newException(ValueError, "atleast 2 arguments allowed for `swap!`")
+    if args[0].dataType != Atom:
+        raise newException(ValueError, "first argument should be atom type for `swap!`")
+
+    let data = args[0].reference
+    let fn = case args[1].dataType
+        of Function: args[1].fun
+        of Lambda: args[1].fnClosure.fun
+        else: raise newException(ValueError, "atom operations needs to be a function")
+    let newData = fn(@[data] & args[2..^1])
+    args[0].reference = newData
+    return newData
+
+proc mapListLike(args: varargs[MalData]): MalData =
+    if args.len != 2:
+        raise newException(ValueError, "exact 2 arguments required for `map`")
+    if not args[0].dataType.isCallable:
+        raise newException(ValueError, "first argument should be function type for `map`")
+    if not args[1].dataType.isListLike:
+        raise newException(ValueError, "second argument should be list/vector type for `map`")
+
+    let newItems = collect:
+        for i in args[1].items:
+            # TODO: refactor this in a invokeCallable method
+            let fn = case args[0].dataType
+                of Function: args[0].fun
+                of Lambda: args[0].fnClosure.fun
+                else: raise newException(ValueError, "map operations needs to be a function")
+            fn(@[i])
+
+    return MalData(dataType: List, items: newItems)
+
+
+
+
 proc getPreludeFunction*(): Table[MalData, MalData] =
     {
       newSymbol("+"): MalData(dataType: Function, fun: addition),
@@ -169,5 +250,15 @@ proc getPreludeFunction*(): Table[MalData, MalData] =
       newSymbol("str"): MalData(dataType: Function, fun: str),
       newSymbol("prn"): MalData(dataType: Function, fun: prn),
       newSymbol("println"): MalData(dataType: Function, fun: println),
+      newSymbol("read-string"): MalData(dataType: Function, fun: read_string),
+      newSymbol("slurp"): MalData(dataType: Function, fun: slurp),
+      newSymbol("atom"): MalData(dataType: Function, fun: makeAtom),
+      newSymbol("atom?"): MalData(dataType: Function, fun: isAtom),
+      newSymbol("deref"): MalData(dataType: Function, fun: atomDeref),
+      newSymbol("swap!"): MalData(dataType: Function, fun: atomSwap),
+      newSymbol("reset!"): MalData(dataType: Function, fun: atomReset),
+      # off the books implementation
+        newSymbol("map"): MalData(dataType: Function, fun: mapListLike),
+
     }.toTable
 

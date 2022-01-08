@@ -91,7 +91,7 @@ proc readAtom(reader: var Reader): MalData =
       try:
         return MalData(dataType: Digit, digit: parseInt(token))
       except ValueError:
-        return MalData(dataType: Symbol, symbol: token)
+        return newSymbol(token)
 
 
 proc readSpecialForms(reader: var Reader): MalData =
@@ -105,14 +105,14 @@ proc readSpecialForms(reader: var Reader): MalData =
     else:
       raise newException(ValueError, "bad symbol")
 
-  let items = @[MalData(dataType: Symbol, symbol: symbol), reader.readForm]
+  let items = @[newSymbol(symbol), reader.readForm]
   result = MalData(dataType: List, items: items)
 
 
 proc readWithMetadata(reader: var Reader): MalData =
   assert reader.next == "^"
 
-  let symbol = MalData(dataType: Symbol, symbol: "with-meta")
+  let symbol = newSymbol("with-meta")
   let (arg, meta) = (reader.readForm, reader.readForm)
 
   result = MalData(dataType: List, items: @[symbol, meta, arg])

@@ -1,7 +1,7 @@
-import std/logging
 import std/strformat
 import std/options
-import logger
+import std/os
+import std/sequtils
 import linenoise
 import reader
 import printer
@@ -9,6 +9,7 @@ import evaluator
 import env
 import MalTypes
 
+include logger
 
 proc read(str: string): MalData =
   reader.readStr(str)
@@ -25,17 +26,42 @@ proc rep(str: string, prelude: var ReplEnv): string =
 proc registerSelfHostedFunctions(prelude: var ReplEnv) =
   let functions = @[
     "(def! not (fn* (a) (if a false true)))",
-    "(def! factorial (fn* (a) (if (= a 1) 1 (* (factorial (- a 1)) a) )))"
+    """(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\nnil)")))))"""
   ]
-
 
   for fun in functions:
     discard fun.rep(prelude)
 
 
+# required to satisfy the GC
+proc envClosure(env: ReplEnv): MalEnvFunctions =
+  var envirn = env
+  return proc(ast: varargs[MalData]): MalData = eval(ast[0], envirn)
+
+
+proc registerEval(prelude: var ReplEnv) =
+  prelude.set(newSymbol("eval"), MalData(dataType: Function, fun: envClosure(prelude)))
+
+
+proc registerCmdArgs(prelude: var ReplEnv) =
+  let params = commandLineParams()
+  let items = if params.len > 1: params[1..^1].map(read)
+  else: @[]
+  prelude.set(newSymbol("*ARGV*"), MalData(dataType: List, items: items))
+
 when isMainModule:
   var prelude = getPrelude()
   prelude.registerSelfHostedFunctions
+  prelude.registerEval
+  prelude.registerCmdArgs
+
+
+  if commandLineParams().len > 0:
+    let programFileName = commandLineParams()[0]
+    echo rep(fmt"""(load-file "{programFileName}")""", prelude)
+    quit()
+
+
 
   while true:
     let inputLine = getInputLine()

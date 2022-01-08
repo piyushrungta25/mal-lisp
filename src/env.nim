@@ -1,8 +1,5 @@
 import std/tables
 import std/options
-import std/sequtils
-import std/logging
-import std/strformat
 import preludeFunctions
 import MalTypes
 import exceptionUtils
