@@ -45,8 +45,8 @@ proc registerEval(prelude: var ReplEnv) =
 
 proc registerCmdArgs(prelude: var ReplEnv) =
   let params = commandLineParams()
-  let items = if params.len > 1: params[1..^1].map(read)
-  else: @[]
+  let items = if params.len > 1: params[1..^1].map(newString)
+    else: @[]
   prelude.set(newSymbol("*ARGV*"), MalData(dataType: List, items: items))
 
 when isMainModule:

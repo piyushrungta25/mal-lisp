@@ -114,6 +114,9 @@ proc `==`*(d1, d2: MalData): bool =
 proc newSymbol*(str: string): MalData =
   MalData(dataType: Symbol, symbol: str)
 
+proc newString*(str: string): MalData =
+  MalData(dataType: String, str: str)
+
 proc isSym*(data: MalData): bool =
   data.dataType == Symbol
 
