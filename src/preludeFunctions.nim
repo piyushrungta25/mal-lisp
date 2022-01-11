@@ -251,6 +251,21 @@ proc concat(args: varargs[MalData]): MalData =
     return MalData(dataType: List, items: newItems)
 
 
+proc vec(args: varargs[MalData]): MalData =
+  if args.len == 0:
+    raise newException(ValueError, "insufficient args to `vec`")
+
+  let arg = args[0]
+
+  if arg.dataType == Vector:
+    return arg
+
+  if arg.dataType == List:
+    return MalData(dataType: Vector, items: arg.items)
+
+  raise newException(ValueError, "Vector/List type required for `vec`")
+
+
 proc getPreludeFunction*(): Table[MalData, MalData] =
     {
       newSymbol("+"): MalData(dataType: Function, fun: addition),
@@ -279,6 +294,7 @@ proc getPreludeFunction*(): Table[MalData, MalData] =
       newSymbol("reset!"): MalData(dataType: Function, fun: atomReset),
       newSymbol("cons"): MalData(dataType: Function, fun: cons),
       newSymbol("concat"): MalData(dataType: Function, fun: concat),
+      newSymbol("vec"): MalData(dataType: Function, fun: vec),
       # off the books implementation
         newSymbol("map"): MalData(dataType: Function, fun: mapListLike),
 

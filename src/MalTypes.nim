@@ -150,6 +150,9 @@ proc isUnQuoteSym*(data: MalData): bool =
 proc isSpliceQuoteSym*(data: MalData): bool =
   data.isSym and data.symbol == "splice-unquote"
 
+proc isQuasiQuoteExpandSym*(data: MalData): bool =
+  data.isSym and data.symbol == "quasiquoteexpand"
+
 proc isVariadicMarkerSym*(data: MalData): bool =
   data.isSym and data.symbol == "&"
 

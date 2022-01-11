@@ -91,28 +91,31 @@ proc applyQuote(args: seq[MalData], replEnv: ReplEnv): MalData =
 
   return args[0]
 
+# forward declaration
+proc quasiQuote(ast: MalData): MalData
+
+
+proc processQuasiQuoteList(ast: MalData): MalData =
+  var resSeq = @[].toList
+  for i in countdown(ast.items.high, ast.items.low):
+    let elt = ast.items[i]
+    if elt.dataType.isListLike and elt.items.len > 0 and elt.items[0].isSpliceQuoteSym:
+      resSeq = @["concat".newSymbol, elt.items[1], resSeq].toList
+    else:
+      resSeq = @["cons".newSymbol, elt.quasiQuote, resSeq].toList
+
+  return resSeq
+
+
 proc quasiQuote(ast: MalData): MalData =
-  if ast.dataType.isListLike:
-    if ast.items.len == 0:
-      return MalData(dataType: List)
-    if ast.items[0].isUnQuoteSym:
+  if ast.dataType == List and ast.items.len != 0 and ast.items[0].isUnQuoteSym:
       return ast.items[1]
 
-    var resSeq = @[].toList
-    for i in countdown(ast.items.high, ast.items.low):
-      let elt = ast.items[i]
-      if elt.dataType.isListLike and elt.items.len > 0 and elt.items[0].isSpliceQuoteSym:
-        resSeq = @["concat".newSymbol, elt.items[1], resSeq].toList
-      else:
-        resSeq = @["cons".newSymbol, elt.quasiQuote, resSeq].toList
-
-      debug(fmt"{i}, {resSeq}")
-
-    return resSeq
-
-
-
-  if ast.dataType == HashMap or ast.dataType == Symbol:
+  if ast.dataType == List:
+    return ast.processQuasiQuoteList
+  elif ast.dataType == Vector:
+    return @["vec".newSymbol, ast.processQuasiQuoteList].toList
+  elif ast.dataType == HashMap or ast.dataType == Symbol:
     return MalData(dataType: List, items: @["quote".newSymbol, ast])
 
   return ast
@@ -122,10 +125,7 @@ proc applyQuasiQuote(args: seq[MalData], replEnv: ReplEnv): (ReplEnv, MalData) =
   if args.len != 1:
     raise newException(ValueError, fmt"incorrect number of args to quasiQuote, expected 1, found {args.len}")
 
-  let qq = args[0].quasiQuote
-  # debug("qq res: " & $qq)
-
-  return (replEnv, qq)
+  return (replEnv, args[0].quasiQuote)
 
 
 
@@ -145,6 +145,8 @@ proc eval*(ast: MalData, replEnv: var ReplEnv): MalData =
       return applyFn(ast.items[1..^1], replEnv)
     elif sym.isQuoteSym:
       return applyQuote(ast.items[1..^1], replEnv)
+    elif sym.isQuasiQuoteExpandSym:
+      return quasiQuote(ast.items[1])
     elif sym.isQuasiQuoteSym:
       (replEnv, ast) = applyQuasiQuote(ast.items[1..^1], replEnv)
     elif sym.isLetSym:
