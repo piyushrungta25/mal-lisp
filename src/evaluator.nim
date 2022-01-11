@@ -99,7 +99,8 @@ proc processQuasiQuoteList(ast: MalData): MalData =
   var resSeq = @[].toList
   for i in countdown(ast.items.high, ast.items.low):
     let elt = ast.items[i]
-    if elt.dataType.isListLike and elt.items.len > 0 and elt.items[0].isSpliceQuoteSym:
+    if elt.dataType.isListLike and elt.items.len > 0 and elt.items[
+        0].isSpliceQuoteSym:
       resSeq = @["concat".newSymbol, elt.items[1], resSeq].toList
     else:
       resSeq = @["cons".newSymbol, elt.quasiQuote, resSeq].toList
@@ -109,7 +110,7 @@ proc processQuasiQuoteList(ast: MalData): MalData =
 
 proc quasiQuote(ast: MalData): MalData =
   if ast.dataType == List and ast.items.len != 0 and ast.items[0].isUnQuoteSym:
-      return ast.items[1]
+    return ast.items[1]
 
   if ast.dataType == List:
     return ast.processQuasiQuoteList

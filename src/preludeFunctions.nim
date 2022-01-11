@@ -244,26 +244,26 @@ proc concat(args: varargs[MalData]): MalData =
     var newItems: seq[MalData] = @[]
 
     for arg in args:
-      if not arg.dataType.isListLike:
-        raise newException(ValueError, "arguments should be list/vector type for `concat`")
-      newItems &= arg.items
+        if not arg.dataType.isListLike:
+            raise newException(ValueError, "arguments should be list/vector type for `concat`")
+        newItems &= arg.items
 
     return MalData(dataType: List, items: newItems)
 
 
 proc vec(args: varargs[MalData]): MalData =
-  if args.len == 0:
-    raise newException(ValueError, "insufficient args to `vec`")
+    if args.len == 0:
+        raise newException(ValueError, "insufficient args to `vec`")
 
-  let arg = args[0]
+    let arg = args[0]
 
-  if arg.dataType == Vector:
-    return arg
+    if arg.dataType == Vector:
+        return arg
 
-  if arg.dataType == List:
-    return MalData(dataType: Vector, items: arg.items)
+    if arg.dataType == List:
+        return MalData(dataType: Vector, items: arg.items)
 
-  raise newException(ValueError, "Vector/List type required for `vec`")
+    raise newException(ValueError, "Vector/List type required for `vec`")
 
 
 proc getPreludeFunction*(): Table[MalData, MalData] =
