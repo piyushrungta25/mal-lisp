@@ -229,6 +229,26 @@ proc mapListLike(args: varargs[MalData]): MalData =
     return MalData(dataType: List, items: newItems)
 
 
+proc cons(args: varargs[MalData]): MalData =
+    if args.len != 2:
+        raise newException(ValueError, "exact 2 arguments required for `cons`")
+    if not args[1].dataType.isListLike:
+        raise newException(ValueError, "second argument should be list/vector type for `map`")
+
+    let newItems = @[args[0]] & args[1].items
+
+    return MalData(dataType: List, items: newItems)
+
+
+proc concat(args: varargs[MalData]): MalData =
+    var newItems: seq[MalData] = @[]
+
+    for arg in args:
+      if not arg.dataType.isListLike:
+        raise newException(ValueError, "arguments should be list/vector type for `concat`")
+      newItems &= arg.items
+
+    return MalData(dataType: List, items: newItems)
 
 
 proc getPreludeFunction*(): Table[MalData, MalData] =
@@ -257,6 +277,8 @@ proc getPreludeFunction*(): Table[MalData, MalData] =
       newSymbol("deref"): MalData(dataType: Function, fun: atomDeref),
       newSymbol("swap!"): MalData(dataType: Function, fun: atomSwap),
       newSymbol("reset!"): MalData(dataType: Function, fun: atomReset),
+      newSymbol("cons"): MalData(dataType: Function, fun: cons),
+      newSymbol("concat"): MalData(dataType: Function, fun: concat),
       # off the books implementation
         newSymbol("map"): MalData(dataType: Function, fun: mapListLike),
 

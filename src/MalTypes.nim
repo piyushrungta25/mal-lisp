@@ -117,6 +117,9 @@ proc newSymbol*(str: string): MalData =
 proc newString*(str: string): MalData =
   MalData(dataType: String, str: str)
 
+proc toList*(items: seq[MalData]): MalData =
+  MalData(dataType: List, items: items)
+
 proc isSym*(data: MalData): bool =
   data.dataType == Symbol
 
@@ -134,6 +137,18 @@ proc isIfSym*(data: MalData): bool =
 
 proc isFnSym*(data: MalData): bool =
   data.isSym and data.symbol == "fn*"
+
+proc isQuoteSym*(data: MalData): bool =
+  data.isSym and data.symbol == "quote"
+
+proc isQuasiQuoteSym*(data: MalData): bool =
+  data.isSym and data.symbol == "quasiquote"
+
+proc isUnQuoteSym*(data: MalData): bool =
+  data.isSym and data.symbol == "unquote"
+
+proc isSpliceQuoteSym*(data: MalData): bool =
+  data.isSym and data.symbol == "splice-unquote"
 
 proc isVariadicMarkerSym*(data: MalData): bool =
   data.isSym and data.symbol == "&"
