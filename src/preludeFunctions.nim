@@ -278,8 +278,6 @@ proc nth(args: varargs[MalData]): MalData =
     let n = args[1].digit
     let lst = args[0].items
 
-    debug(fmt"n: {n}, lst: {lst}")
-
     if lst.len <= n:
         raise newException(ValueError, "index out of range")
 
