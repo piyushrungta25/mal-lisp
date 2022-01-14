@@ -5,6 +5,9 @@ import stringUtils
 type
   MalEnvFunctions* = proc(args: varargs[MalData]): MalData
 
+  MalException* = ref object of Exception
+    malObj*: MalData
+
   ReplEnv* = ref object
     outer*: Option[ReplEnv]
     properties*: Table[MalData, MalData]
@@ -95,6 +98,16 @@ proc `$`*(malData: MalData): string = malData.toString
 proc hash*(malData: MalData): Hash = hash($malData)
 
 
+proc `==`*(d1, d2: MalData): bool
+
+proc unorderedEquals*(a, b: OrderedTable): bool =
+  if a.len != b.len: return false
+
+  for aKey in a.keys:
+    if not (b.contains(aKey) and a[aKey] == b[aKey]): return false
+
+  return true
+
 proc `==`*(d1, d2: MalData): bool =
   if d1.dataType.isListLike and d2.dataType.isListLike:
     return d1.items == d2.items
@@ -107,7 +120,7 @@ proc `==`*(d1, d2: MalData): bool =
     of Nil: result = true
     of Symbol: result = d1.symbol == d2.symbol
     of Function: result = d1.fun.rawProc == d2.fun.rawProc
-    of HashMap: result = d1.map == d2.map
+    of HashMap: result = unorderedEquals(d1.map, d2.map)
     of Atom: result = d1.reference == d2.reference
     else: return d1.items == d2.items
 
@@ -117,6 +130,8 @@ proc newSymbol*(str: string): MalData =
 
 proc newString*(str: string): MalData =
   MalData(dataType: String, str: str)
+
+proc newMalNil*(): MalData = MalData(dataType: Nil)
 
 proc toList*(items: seq[MalData]): MalData =
   MalData(dataType: List, items: items)
@@ -159,6 +174,12 @@ proc isDefMarcoSym*(data: MalData): bool =
 
 proc isMacroExpandSym*(data: MalData): bool =
   data.isSym and data.symbol == "macroexpand"
+
+proc isTrySym*(data: MalData): bool =
+  data.isSym and data.symbol == "try*"
+
+proc isCatchSym*(data: MalData): bool =
+  data.isSym and data.symbol == "catch*"
 
 proc isVariadicMarkerSym*(data: MalData): bool =
   data.isSym and data.symbol == "&"

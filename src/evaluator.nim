@@ -8,6 +8,7 @@ import boolUtils
 import env
 
 
+
 proc eval*(ast: MalData, replEnv: var ReplEnv): MalData
 proc evalAst(ast: MalData, replEnv: var ReplEnv): MalData
 
@@ -163,6 +164,25 @@ proc applyQuasiQuote(args: seq[MalData], replEnv: ReplEnv): (ReplEnv, MalData) =
   return (replEnv, args[0].quasiQuote)
 
 
+proc isValidCatchExpr(catchExpr: MalData): bool =
+  catchExpr.dataType.isListLike and
+    catchExpr.items.len == 3 and
+    catchExpr.items[0].isCatchSym and
+    catchExpr.items[1].isSym
+
+proc applyTry(args: seq[MalData], replEnv: var ReplEnv): MalData =
+  try:
+    return args[0].eval(replEnv)
+  except Exception as e:
+    if args.len < 2: raise e
+
+    let catchExpr = args[1]
+    if not catchExpr.isValidCatchExpr:
+      raise newException(ValueError, "invalid catch expression")
+    let exp = if e of MalException: MalException(e).malObj else: e.msg.newString
+    var ne = newEnv(some(replEnv), binds = @[catchExpr.items[1]], exprs = @[exp])
+    return eval(catchExpr.items[2], ne)
+
 
 proc eval*(ast: MalData, replEnv: var ReplEnv): MalData =
   var ast = ast
@@ -190,6 +210,8 @@ proc eval*(ast: MalData, replEnv: var ReplEnv): MalData =
       return applyQuote(ast.items[1..^1], replEnv)
     elif sym.isQuasiQuoteExpandSym:
       return quasiQuote(ast.items[1])
+    elif sym.isTrySym:
+      return applyTry(ast.items[1..^1], replEnv)
     elif sym.isQuasiQuoteSym:
       (replEnv, ast) = applyQuasiQuote(ast.items[1..^1], replEnv)
     elif sym.isLetSym:
