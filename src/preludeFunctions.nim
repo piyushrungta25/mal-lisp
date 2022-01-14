@@ -268,47 +268,47 @@ proc vec(args: varargs[MalData]): MalData =
 
 
 proc nth(args: varargs[MalData]): MalData =
-  if args.len != 2:
-    raise newException(ValueError, fmt"required 2 args to `nth`, found {args.len}")
-  if not args[0].dataType.isListLike:
-    raise newException(ValueError, fmt"first argument to `nth` should be a list")
-  if args[1].dataType != Digit:
-    raise newException(ValueError, fmt"second argument to `nth` should be a digit")
+    if args.len != 2:
+        raise newException(ValueError, fmt"required 2 args to `nth`, found {args.len}")
+    if not args[0].dataType.isListLike:
+        raise newException(ValueError, fmt"first argument to `nth` should be a list")
+    if args[1].dataType != Digit:
+        raise newException(ValueError, fmt"second argument to `nth` should be a digit")
 
-  let n = args[1].digit
-  let lst = args[0].items
+    let n = args[1].digit
+    let lst = args[0].items
 
-  debug(fmt"n: {n}, lst: {lst}")
+    debug(fmt"n: {n}, lst: {lst}")
 
-  if lst.len <= n:
-    raise newException(ValueError, "index out of range")
+    if lst.len <= n:
+        raise newException(ValueError, "index out of range")
 
-  return lst[n]
+    return lst[n]
 
 proc first(args: varargs[MalData]): MalData =
-  if args.len != 1:
-    raise newException(ValueError, fmt"required 1 arg to `first`, found {args.len}")
-  if args[0].dataType == Nil:
-    return MalData(dataType: Nil)
-  if not args[0].dataType.isListLike:
-    raise newException(ValueError, fmt"first argument to `first` should be a list")
-  if args[0].items.len == 0:
-    return MalData(dataType: Nil)
+    if args.len != 1:
+        raise newException(ValueError, fmt"required 1 arg to `first`, found {args.len}")
+    if args[0].dataType == Nil:
+        return MalData(dataType: Nil)
+    if not args[0].dataType.isListLike:
+        raise newException(ValueError, fmt"first argument to `first` should be a list")
+    if args[0].items.len == 0:
+        return MalData(dataType: Nil)
 
-  return args[0].items[0]
+    return args[0].items[0]
 
 
 proc rest(args: varargs[MalData]): MalData =
-  if args.len != 1:
-    raise newException(ValueError, fmt"required 1 arg to `rest`, found {args.len}")
-  if args[0].dataType == Nil:
-    return MalData(dataType: List, items: @[])
-  if not args[0].dataType.isListLike:
-    raise newException(ValueError, fmt"first argument to `rest` should be a list")
-  if args[0].items.len == 0:
-    return MalData(dataType: List, items: @[])
+    if args.len != 1:
+        raise newException(ValueError, fmt"required 1 arg to `rest`, found {args.len}")
+    if args[0].dataType == Nil:
+        return MalData(dataType: List, items: @[])
+    if not args[0].dataType.isListLike:
+        raise newException(ValueError, fmt"first argument to `rest` should be a list")
+    if args[0].items.len == 0:
+        return MalData(dataType: List, items: @[])
 
-  return MalData(dataType: List, items: args[0].items[1..^1])
+    return MalData(dataType: List, items: args[0].items[1..^1])
 
 
 proc getPreludeFunction*(): Table[MalData, MalData] =
