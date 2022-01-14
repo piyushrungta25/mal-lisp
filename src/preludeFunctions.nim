@@ -3,6 +3,7 @@ import std/tables
 import std/sequtils
 import std/strutils
 import std/sugar
+import std/logging
 import reader
 import MalTypes
 import printer
@@ -266,6 +267,48 @@ proc vec(args: varargs[MalData]): MalData =
     raise newException(ValueError, "Vector/List type required for `vec`")
 
 
+proc nth(args: varargs[MalData]): MalData =
+    if args.len != 2:
+        raise newException(ValueError, fmt"required 2 args to `nth`, found {args.len}")
+    if not args[0].dataType.isListLike:
+        raise newException(ValueError, fmt"first argument to `nth` should be a list")
+    if args[1].dataType != Digit:
+        raise newException(ValueError, fmt"second argument to `nth` should be a digit")
+
+    let n = args[1].digit
+    let lst = args[0].items
+
+    if lst.len <= n:
+        raise newException(ValueError, "index out of range")
+
+    return lst[n]
+
+proc first(args: varargs[MalData]): MalData =
+    if args.len != 1:
+        raise newException(ValueError, fmt"required 1 arg to `first`, found {args.len}")
+    if args[0].dataType == Nil:
+        return MalData(dataType: Nil)
+    if not args[0].dataType.isListLike:
+        raise newException(ValueError, fmt"first argument to `first` should be a list")
+    if args[0].items.len == 0:
+        return MalData(dataType: Nil)
+
+    return args[0].items[0]
+
+
+proc rest(args: varargs[MalData]): MalData =
+    if args.len != 1:
+        raise newException(ValueError, fmt"required 1 arg to `rest`, found {args.len}")
+    if args[0].dataType == Nil:
+        return MalData(dataType: List, items: @[])
+    if not args[0].dataType.isListLike:
+        raise newException(ValueError, fmt"first argument to `rest` should be a list")
+    if args[0].items.len == 0:
+        return MalData(dataType: List, items: @[])
+
+    return MalData(dataType: List, items: args[0].items[1..^1])
+
+
 proc getPreludeFunction*(): Table[MalData, MalData] =
     {
       newSymbol("+"): MalData(dataType: Function, fun: addition),
@@ -295,6 +338,9 @@ proc getPreludeFunction*(): Table[MalData, MalData] =
       newSymbol("cons"): MalData(dataType: Function, fun: cons),
       newSymbol("concat"): MalData(dataType: Function, fun: concat),
       newSymbol("vec"): MalData(dataType: Function, fun: vec),
+      newSymbol("nth"): MalData(dataType: Function, fun: nth),
+      newSymbol("first"): MalData(dataType: Function, fun: first),
+      newSymbol("rest"): MalData(dataType: Function, fun: rest),
       # off the books implementation
         newSymbol("map"): MalData(dataType: Function, fun: mapListLike),
 
