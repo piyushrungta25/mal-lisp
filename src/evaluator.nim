@@ -26,6 +26,40 @@ proc createEnvBindings(replEnv: var ReplEnv, bindings: MalData) =
     i += 2
 
 
+proc isMacroCall(ast: MalData, replEnv: ReplEnv): bool =
+  result = ast.dataType == List and
+    ast.items.len > 0 and
+    ast.items[0].isSym and
+    replEnv.find(ast.items[0]).isSome and
+    replEnv.get(ast.items[0]).dataType == Lambda and
+    replEnv.get(ast.items[0]).isMacro == true
+
+
+proc macroExpand(ast: MalData, replEnv: ReplEnv): MalData =
+  var ast = ast
+
+  while ast.isMacroCall(replEnv):
+    var macroFun = replEnv.get(ast.items[0])
+    case macroFun.dataType
+      of Function:
+        ast = macroFun.fun(ast.items[1..^1])
+      of Lambda:
+        ast = macroFun.expression(ast.items[1..^1])
+      else:
+        raise newException(ValueError, "no macro function found in env, should not happen")
+
+  return ast
+
+
+proc applyDefMacro(args: seq[MalData], replEnv: var ReplEnv): MalData =
+  if args.len != 2:
+    raise newException(ValueError, fmt"malfolmed `defmacro!` expression." &
+        "Expected `2` arguments, found `{args.len}`")
+  result = eval(args[1], replEnv)
+  result.isMacro = true
+  replEnv.set(args[0], result)
+
+
 proc applyDef(args: seq[MalData], replEnv: var ReplEnv): MalData =
   if args.len != 2:
     raise newException(ValueError, fmt"malfolmed `def!` expression." &
@@ -134,14 +168,20 @@ proc eval*(ast: MalData, replEnv: var ReplEnv): MalData =
   var ast = ast
   var replEnv = replEnv
 
+  ast = macroExpand(ast, replEnv)
+
   while true:
     if ast.dataType != List: return ast.evalAst(replEnv)
     elif ast.items.len == 0: return ast
 
     # non empty list type, apply all operations
     let sym = ast.items[0]
-    if sym.isDefSym:
+    if sym.isMacroExpandSym:
+      return macroExpand(ast.items[1], replEnv)
+    elif sym.isDefSym:
       return applyDef(ast.items[1..^1], replEnv)
+    elif sym.isDefMarcoSym:
+      return applyDefMacro(ast.items[1..^1], replEnv)
     elif sym.isFnSym:
       return applyFn(ast.items[1..^1], replEnv)
     elif sym.isQuoteSym:

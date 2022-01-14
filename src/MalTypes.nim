@@ -46,6 +46,7 @@ type
         parameters*: seq[MalData]
         replEnv*: ReplEnv
         fnClosure*: MalData
+        isMacro*: bool
       of Atom:
         reference*: MalData
 
@@ -152,6 +153,12 @@ proc isSpliceQuoteSym*(data: MalData): bool =
 
 proc isQuasiQuoteExpandSym*(data: MalData): bool =
   data.isSym and data.symbol == "quasiquoteexpand"
+
+proc isDefMarcoSym*(data: MalData): bool =
+  data.isSym and data.symbol == "defmacro!"
+
+proc isMacroExpandSym*(data: MalData): bool =
+  data.isSym and data.symbol == "macroexpand"
 
 proc isVariadicMarkerSym*(data: MalData): bool =
   data.isSym and data.symbol == "&"
