@@ -168,9 +168,11 @@ proc eval*(ast: MalData, replEnv: var ReplEnv): MalData =
   var ast = ast
   var replEnv = replEnv
 
-  ast = macroExpand(ast, replEnv)
 
   while true:
+
+    ast = macroExpand(ast, replEnv)
+
     if ast.dataType != List: return ast.evalAst(replEnv)
     elif ast.items.len == 0: return ast
 
