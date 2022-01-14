@@ -5,6 +5,9 @@ import stringUtils
 type
   MalEnvFunctions* = proc(args: varargs[MalData]): MalData
 
+  MalException* = ref object of Exception
+    malObj*: MalData
+
   ReplEnv* = ref object
     outer*: Option[ReplEnv]
     properties*: Table[MalData, MalData]
@@ -159,6 +162,12 @@ proc isDefMarcoSym*(data: MalData): bool =
 
 proc isMacroExpandSym*(data: MalData): bool =
   data.isSym and data.symbol == "macroexpand"
+
+proc isTrySym*(data: MalData): bool =
+  data.isSym and data.symbol == "try*"
+
+proc isCatchSym*(data: MalData): bool =
+  data.isSym and data.symbol == "catch*"
 
 proc isVariadicMarkerSym*(data: MalData): bool =
   data.isSym and data.symbol == "&"

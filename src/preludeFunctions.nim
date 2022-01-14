@@ -308,6 +308,12 @@ proc rest(args: varargs[MalData]): MalData =
 
     return MalData(dataType: List, items: args[0].items[1..^1])
 
+proc throw(args: varargs[MalData]): MalData =
+    if args.len != 1:
+        raise newException(ValueError, fmt"required 1 arg to `rest`, found {args.len}")
+
+    raise MalException(malObj: args[0])
+
 
 proc getPreludeFunction*(): Table[MalData, MalData] =
     {
@@ -341,6 +347,7 @@ proc getPreludeFunction*(): Table[MalData, MalData] =
       newSymbol("nth"): MalData(dataType: Function, fun: nth),
       newSymbol("first"): MalData(dataType: Function, fun: first),
       newSymbol("rest"): MalData(dataType: Function, fun: rest),
+      newSymbol("throw"): MalData(dataType: Function, fun: throw),
       # off the books implementation
         newSymbol("map"): MalData(dataType: Function, fun: mapListLike),
 

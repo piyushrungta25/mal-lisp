@@ -70,5 +70,7 @@ when isMainModule:
 
     try:
       echo rep(inputLine.get, prelude)
+    except MalException as e:
+      echo fmt"[ERROR] {e.malObj}"
     except Exception as e:
       echo fmt"[ERROR] {e.msg}"
