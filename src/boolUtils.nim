@@ -14,3 +14,6 @@ proc isMalTrue*(data: MalData): bool =
 
 proc isMalFalse*(data: MalData): bool =
   return not data.isMalTrue
+
+proc newMalBool*(val: bool): Maldata =
+  return Maldata(dataType: Boolean, value: val)

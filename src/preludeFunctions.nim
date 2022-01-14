@@ -4,6 +4,8 @@ import std/sequtils
 import std/strutils
 import std/sugar
 import std/logging
+import std/sets
+import stringUtils
 import reader
 import MalTypes
 import printer
@@ -362,9 +364,7 @@ proc applyMalList(args: varargs[MalData]): MalData =
   let funArgs = if args.len == 2: args[^1].items else: args[1..^2].concat(args[^1].items)
   return args[0].invokeCallable(funArgs)
 
-
-proc getPreludeFunction*(): Table[MalData, MalData] =
-    {
+var preludeFunctions: Table[MalData, MalData] = {
       newSymbol("+"): MalData(dataType: Function, fun: addition),
       newSymbol("-"): MalData(dataType: Function, fun: subtraction),
       newSymbol("*"): MalData(dataType: Function, fun: multiplication),
@@ -403,4 +403,87 @@ proc getPreludeFunction*(): Table[MalData, MalData] =
       newSymbol("map"): MalData(dataType: Function, fun: mapListLike),
       newSymbol("apply"): MalData(dataType: Function, fun: applyMalList),
     }.toTable
+
+template MalCoreFunction(symName: string, body: untyped) =
+  var thisProc = proc(args {.inject.} : varargs[MalData]): MalData =
+    body
+
+  preludeFunctions[symName.newSymbol] = MalData(dataType: Function, fun: thisProc)
+
+
+MalCoreFunction "symbol":
+  return args[0].str.newSymbol
+
+MalCoreFunction "keyword":
+  if $args[0].str[0] == KEYWORD_PREFIX: return args[0]
+  else: return (KEYWORD_PREFIX & args[0].str).newString
+
+MalCoreFunction "keyword?":
+  return newMalBool(args[0].dataType == String and args[0].str.len != 0 and $args[0].str[0] == KEYWORD_PREFIX)
+
+MalCoreFunction "vector":
+  return MalData(dataType: Vector, items: args.toSeq)
+
+MalCoreFunction "vector?":
+  return newMalBool(args[0].dataType == Vector)
+
+MalCoreFunction "sequential?":
+  return newMalBool(args[0].dataType.isListLike)
+
+MalCoreFunction "map?":
+  return newMalBool(args[0].dataType == HashMap)
+
+MalCoreFunction "hash-map":
+  if args.len mod 2 != 0:
+    raise newException(ValueError, "even number of args required for `hash-map`")
+
+
+  var map = initOrderedTable[MalData, MalData]()
+  var i = 0
+  while i < args.len:
+    map[args[i]] = args[i+1]
+    i += 2
+
+  return MalData(dataType: HashMap, map: map)
+
+MalCoreFunction "contains?":
+  return newMalBool(args[0].map.contains(args[1]))
+
+MalCoreFunction "keys":
+  return args[0].map.keys.toSeq.toList
+
+MalCoreFunction "vals":
+  return args[0].map.values.toSeq.toList
+
+MalCoreFunction "get":
+  if args[0].dataType == Nil: return newMalNil()
+  return args[0].map.getOrDefault(args[1], newMalNil())
+
+MalCoreFunction "dissoc":
+  var map = initOrderedTable[MalData, MalData]()
+  let oldKeys = args[0].map.keys.toSeq
+  let ignoreKeys = args[1..^1].toHashSet
+
+  for oldKey in oldKeys:
+    if not ignoreKeys.contains(oldKey):
+      map[oldKey] = args[0].map[oldKey]
+
+  return MalData(dataType: HashMap, map: map)
+
+
+MalCoreFunction "assoc":
+  var map = initOrderedTable[MalData, MalData]()
+  for (key ,val) in args[0].map.pairs:
+    map[key] = val
+
+  let dataList = args[1..^1]
+  var i = 0
+  while i < dataList.len:
+    map[dataList[i]] = dataList[i+1]
+    i += 2
+
+  return MalData(dataType: HashMap, map: map)
+
+
+proc getPreludeFunction*(): Table[MalData, MalData] = preludeFunctions
 

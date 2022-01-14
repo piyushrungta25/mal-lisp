@@ -121,6 +121,8 @@ proc newSymbol*(str: string): MalData =
 proc newString*(str: string): MalData =
   MalData(dataType: String, str: str)
 
+proc newMalNil*(): MalData = MalData(dataType: Nil)
+
 proc toList*(items: seq[MalData]): MalData =
   MalData(dataType: List, items: items)
 
