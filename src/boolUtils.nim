@@ -9,3 +9,8 @@ proc isFalsy*(data: MalData): bool =
 proc isTruthy*(data: MalData): bool =
   return not data.isFalsy
 
+proc isMalTrue*(data: MalData): bool =
+  return data.dataType == Boolean and data.value == true
+
+proc isMalFalse*(data: MalData): bool =
+  return not data.isMalTrue

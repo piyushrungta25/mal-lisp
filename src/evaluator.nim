@@ -178,7 +178,8 @@ proc applyTry(args: seq[MalData], replEnv: var ReplEnv): MalData =
     return args[0].eval(replEnv)
   except Exception as e:
     let catchExpr = args[1]
-    assert catchExpr.isValidCatchExpr
+    if not catchExpr.isValidCatchExpr:
+      raise newException(ValueError, "invalid catch expression")
     let exp = if e of MalException: MalException(e).malObj else: e.msg.newString
     var ne = newEnv(some(replEnv), binds = @[catchExpr.items[1]], exprs = @[exp])
     return eval(catchExpr.items[2], ne)
