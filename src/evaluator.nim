@@ -165,18 +165,17 @@ proc applyQuasiQuote(args: seq[MalData], replEnv: ReplEnv): (ReplEnv, MalData) =
 
 
 proc isValidCatchExpr(catchExpr: MalData): bool =
-    catchExpr.dataType.isListLike and
-      catchExpr.items.len == 3 and
-      catchExpr.items[0].isCatchSym and
-      catchExpr.items[1].isSym
+  catchExpr.dataType.isListLike and
+    catchExpr.items.len == 3 and
+    catchExpr.items[0].isCatchSym and
+    catchExpr.items[1].isSym
 
 proc applyTry(args: seq[MalData], replEnv: var ReplEnv): MalData =
-  if args.len != 2:
-    raise newException(ValueError, fmt"wrong number of arguments to `try*`, excpected 2, found {args.len}")
-
   try:
     return args[0].eval(replEnv)
   except Exception as e:
+    if args.len < 2: raise e
+
     let catchExpr = args[1]
     if not catchExpr.isValidCatchExpr:
       raise newException(ValueError, "invalid catch expression")

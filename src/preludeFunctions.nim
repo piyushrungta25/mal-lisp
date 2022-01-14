@@ -301,39 +301,39 @@ proc throw(args: varargs[MalData]): MalData =
 
 
 proc isNil(args: varargs[MalData]): MalData =
-  if args.len != 1:
-    raise newException(ValueError, fmt"required 1 arg, found {args.len}")
+    if args.len != 1:
+        raise newException(ValueError, fmt"required 1 arg, found {args.len}")
 
-  return MalData(dataType: Boolean, value: args[0].dataType == Nil)
+    return MalData(dataType: Boolean, value: args[0].dataType == Nil)
 
 
 proc isTrue(args: varargs[MalData]): MalData =
-  if args.len != 1:
-    raise newException(ValueError, fmt"required 1 arg, found {args.len}")
+    if args.len != 1:
+        raise newException(ValueError, fmt"required 1 arg, found {args.len}")
 
-  return MalData(dataType: Boolean, value: args[0].isMalTrue)
+    return MalData(dataType: Boolean, value: args[0].isMalTrue)
 
 
 proc isFalse(args: varargs[MalData]): MalData =
-  if args.len != 1:
-    raise newException(ValueError, fmt"required 1 arg, found {args.len}")
+    if args.len != 1:
+        raise newException(ValueError, fmt"required 1 arg, found {args.len}")
 
-  return MalData(dataType: Boolean, value: args[0].isMalFalse)
+    return MalData(dataType: Boolean, value: args[0].isMalFalse)
 
 
 proc isSymbol(args: varargs[MalData]): MalData =
-  if args.len != 1:
-    raise newException(ValueError, fmt"required 1 arg, found {args.len}")
+    if args.len != 1:
+        raise newException(ValueError, fmt"required 1 arg, found {args.len}")
 
-  return MalData(dataType: Boolean, value: args[0].isSym)
+    return MalData(dataType: Boolean, value: args[0].isSym)
 
 
 proc invokeCallable(fun: MalData, args: seq[MalData]): MalData =
-  let fn = case fun.dataType
-      of Function: fun.fun
-      of Lambda: fun.expression
-      else: raise newException(ValueError, "map operations needs to be a function")
-  return fn(args)
+    let fn = case fun.dataType
+        of Function: fun.fun
+        of Lambda: fun.expression
+        else: raise newException(ValueError, "map operations needs to be a function")
+    return fn(args)
 
 
 proc mapListLike(args: varargs[MalData]): MalData =
@@ -346,23 +346,24 @@ proc mapListLike(args: varargs[MalData]): MalData =
 
     let newItems = collect:
         for i in args[1].items:
-          args[0].invokeCallable(@[i])
+            args[0].invokeCallable(@[i])
 
     return MalData(dataType: List, items: newItems)
 
 
 proc applyMalList(args: varargs[MalData]): MalData =
-  if args.len < 2:
-    raise newException(ValueError, fmt"required atleast 2 arg, found {args.len}")
+    if args.len < 2:
+        raise newException(ValueError, fmt"required atleast 2 arg, found {args.len}")
 
-  if not args[0].dataType.isCallable:
-      raise newException(ValueError, "first argument should be function type for `apply`")
+    if not args[0].dataType.isCallable:
+        raise newException(ValueError, "first argument should be function type for `apply`")
 
-  if not args[^1].dataType.isListLike:
-      raise newException(ValueError, "last argument should be list/vector type for `apply`")
+    if not args[^1].dataType.isListLike:
+        raise newException(ValueError, "last argument should be list/vector type for `apply`")
 
-  let funArgs = if args.len == 2: args[^1].items else: args[1..^2].concat(args[^1].items)
-  return args[0].invokeCallable(funArgs)
+    let funArgs = if args.len == 2: args[^1].items else: args[1..^2].concat(
+            args[^1].items)
+    return args[0].invokeCallable(funArgs)
 
 var preludeFunctions: Table[MalData, MalData] = {
       newSymbol("+"): MalData(dataType: Function, fun: addition),
@@ -405,84 +406,85 @@ var preludeFunctions: Table[MalData, MalData] = {
     }.toTable
 
 template MalCoreFunction(symName: string, body: untyped) =
-  var thisProc = proc(args {.inject.} : varargs[MalData]): MalData =
-    body
+    var thisProc = proc(args {.inject.}: varargs[MalData]): MalData =
+        body
 
-  preludeFunctions[symName.newSymbol] = MalData(dataType: Function, fun: thisProc)
+    preludeFunctions[symName.newSymbol] = MalData(dataType: Function, fun: thisProc)
 
 
 MalCoreFunction "symbol":
-  return args[0].str.newSymbol
+    return args[0].str.newSymbol
 
 MalCoreFunction "keyword":
-  if $args[0].str[0] == KEYWORD_PREFIX: return args[0]
-  else: return (KEYWORD_PREFIX & args[0].str).newString
+    if $args[0].str[0] == KEYWORD_PREFIX: return args[0]
+    else: return (KEYWORD_PREFIX & args[0].str).newString
 
 MalCoreFunction "keyword?":
-  return newMalBool(args[0].dataType == String and args[0].str.len != 0 and $args[0].str[0] == KEYWORD_PREFIX)
+    return newMalBool(args[0].dataType == String and args[0].str.len != 0 and
+            $args[0].str[0] == KEYWORD_PREFIX)
 
 MalCoreFunction "vector":
-  return MalData(dataType: Vector, items: args.toSeq)
+    return MalData(dataType: Vector, items: args.toSeq)
 
 MalCoreFunction "vector?":
-  return newMalBool(args[0].dataType == Vector)
+    return newMalBool(args[0].dataType == Vector)
 
 MalCoreFunction "sequential?":
-  return newMalBool(args[0].dataType.isListLike)
+    return newMalBool(args[0].dataType.isListLike)
 
 MalCoreFunction "map?":
-  return newMalBool(args[0].dataType == HashMap)
+    return newMalBool(args[0].dataType == HashMap)
 
 MalCoreFunction "hash-map":
-  if args.len mod 2 != 0:
-    raise newException(ValueError, "even number of args required for `hash-map`")
+    if args.len mod 2 != 0:
+        raise newException(ValueError, "even number of args required for `hash-map`")
 
 
-  var map = initOrderedTable[MalData, MalData]()
-  var i = 0
-  while i < args.len:
-    map[args[i]] = args[i+1]
-    i += 2
+    var map = initOrderedTable[MalData, MalData]()
+    var i = 0
+    while i < args.len:
+        map[args[i]] = args[i+1]
+        i += 2
 
-  return MalData(dataType: HashMap, map: map)
+    return MalData(dataType: HashMap, map: map)
 
 MalCoreFunction "contains?":
-  return newMalBool(args[0].map.contains(args[1]))
+    return newMalBool(args[0].map.contains(args[1]))
 
 MalCoreFunction "keys":
-  return args[0].map.keys.toSeq.toList
+    return args[0].map.keys.toSeq.toList
 
 MalCoreFunction "vals":
-  return args[0].map.values.toSeq.toList
+    return args[0].map.values.toSeq.toList
 
 MalCoreFunction "get":
-  if args[0].dataType == Nil: return newMalNil()
-  return args[0].map.getOrDefault(args[1], newMalNil())
+    if args[0].dataType == Nil: return newMalNil()
+    return args[0].map.getOrDefault(args[1], newMalNil())
 
 MalCoreFunction "dissoc":
-  var map = initOrderedTable[MalData, MalData]()
-  let oldKeys = args[0].map.keys.toSeq
-  let ignoreKeys = args[1..^1].toHashSet
+    var map = initOrderedTable[MalData, MalData]()
+    let oldKeys = args[0].map.keys.toSeq
+    let ignoreKeys = args[1..^1].toHashSet
 
-  for oldKey in oldKeys:
-    if not ignoreKeys.contains(oldKey):
-      map[oldKey] = args[0].map[oldKey]
+    for oldKey in oldKeys:
+        if not ignoreKeys.contains(oldKey):
+            map[oldKey] = args[0].map[oldKey]
 
-  return MalData(dataType: HashMap, map: map)
+    return MalData(dataType: HashMap, map: map)
 
 
 MalCoreFunction "assoc":
-  var map = initOrderedTable[MalData, MalData]()
-  for (key ,val) in args[0].map.pairs:
-    map[key] = val
+    var map = initOrderedTable[MalData, MalData]()
+    for (key, val) in args[0].map.pairs:
+        map[key] = val
 
-  let dataList = args[1..^1]
-  var i = 0
-  while i < dataList.len:
-    map[dataList[i]] = dataList[i+1]
-    i += 2
+    let dataList = args[1..^1]
+    var i = 0
+    while i < dataList.len:
+        map[dataList[i]] = dataList[i+1]
+        i += 2
 
-  return MalData(dataType: HashMap, map: map)
+    return MalData(dataType: HashMap, map: map)
 
 
 proc getPreludeFunction*(): Table[MalData, MalData] = preludeFunctions
