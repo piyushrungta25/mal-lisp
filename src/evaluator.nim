@@ -2,15 +2,24 @@ import std/strformat
 import std/tables
 import std/sequtils
 import std/options
-import std/logging
 import MalTypes
 import boolUtils
 import env
+import utils
 
 
 
 proc eval*(ast: MalData, replEnv: var ReplEnv): MalData
 proc evalAst(ast: MalData, replEnv: var ReplEnv): MalData
+
+
+proc isMacroCall*(ast: MalData, replEnv: ReplEnv): bool =
+  result = ast.dataType == List and
+    ast.items.len > 0 and
+    ast.items[0].isSym and
+    replEnv.find(ast.items[0]).isSome and
+    replEnv.get(ast.items[0]).dataType == Lambda and
+    replEnv.get(ast.items[0]).isMacro == true
 
 
 proc createEnvBindings(replEnv: var ReplEnv, bindings: MalData) =
@@ -25,15 +34,6 @@ proc createEnvBindings(replEnv: var ReplEnv, bindings: MalData) =
   while i < bindings.items.len:
     replEnv.set(bindings.items[i], eval(bindings.items[i+1], replEnv))
     i += 2
-
-
-proc isMacroCall(ast: MalData, replEnv: ReplEnv): bool =
-  result = ast.dataType == List and
-    ast.items.len > 0 and
-    ast.items[0].isSym and
-    replEnv.find(ast.items[0]).isSome and
-    replEnv.get(ast.items[0]).dataType == Lambda and
-    replEnv.get(ast.items[0]).isMacro == true
 
 
 proc macroExpand(ast: MalData, replEnv: ReplEnv): MalData =
@@ -164,17 +164,11 @@ proc applyQuasiQuote(args: seq[MalData], replEnv: ReplEnv): (ReplEnv, MalData) =
   return (replEnv, args[0].quasiQuote)
 
 
-proc isValidCatchExpr(catchExpr: MalData): bool =
-  catchExpr.dataType.isListLike and
-    catchExpr.items.len == 3 and
-    catchExpr.items[0].isCatchSym and
-    catchExpr.items[1].isSym
-
 proc applyTry(args: seq[MalData], replEnv: var ReplEnv): MalData =
   try:
     return args[0].eval(replEnv)
   except Exception as e:
-    if args.len < 2: raise e
+    if args.len < 2: raise e # no catch statement provided
 
     let catchExpr = args[1]
     if not catchExpr.isValidCatchExpr:
@@ -188,9 +182,7 @@ proc eval*(ast: MalData, replEnv: var ReplEnv): MalData =
   var ast = ast
   var replEnv = replEnv
 
-
   while true:
-
     ast = macroExpand(ast, replEnv)
 
     if ast.dataType != List: return ast.evalAst(replEnv)
@@ -212,6 +204,7 @@ proc eval*(ast: MalData, replEnv: var ReplEnv): MalData =
       return quasiQuote(ast.items[1])
     elif sym.isTrySym:
       return applyTry(ast.items[1..^1], replEnv)
+    # tail call optimized
     elif sym.isQuasiQuoteSym:
       (replEnv, ast) = applyQuasiQuote(ast.items[1..^1], replEnv)
     elif sym.isLetSym:
@@ -249,4 +242,3 @@ proc evalAst(ast: MalData, replEnv: var ReplEnv): MalData =
       for (k, v) in ast.map.pairs:
         result.map[eval(k, replEnv)] = eval(v, replEnv)
     else: return ast
-
