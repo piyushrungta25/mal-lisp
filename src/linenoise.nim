@@ -24,9 +24,9 @@ linenoiseSetMultiLine(true.cint)
 linenoiseHistoryLoad(historyFileName)
 
 
-proc getInputLine*(): Option[string] =
+proc getInputLine*(prompt: string = "user> "): Option[string] =
   while true:
-    let line = linenoise("user> ")
+    let line = linenoise(prompt)
     if line == nil:
       return none(string)
     if line.len != 0:
