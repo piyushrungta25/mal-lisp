@@ -452,3 +452,17 @@ MalCoreFunction "readline":
     if inputLine.isNone: return newMalNil()
     return inputLine.get.newString
 
+MalCoreFunction "string?":
+  return newMalBool(args[0].dataType == String)
+
+
+MalCoreFunction "number?":
+  return newMalBool(args[0].dataType == Digit)
+
+
+MalCoreFunction "fn?":
+  return newMalBool(args[0].dataType.isCallable)
+
+
+MalCoreFunction "macro?":
+  return newMalBool(args[0].dataType == Lambda and args[0].isMacro)

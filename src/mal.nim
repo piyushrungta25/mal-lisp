@@ -61,9 +61,6 @@ proc registerNotImplementedFns(prelude: var ReplEnv) =
     "time-ms",
     "meta",
     "with-meta",
-    "fn?",
-    "string?",
-    "number?",
     "seq",
     "conj",
   ]
