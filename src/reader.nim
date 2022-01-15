@@ -135,5 +135,7 @@ proc readForm(reader: var Reader): MalData =
 
 
 proc readStr*(str: string): MalData =
-  var reader = Reader(tokens: str.tokenize)
+  let tokens = str.tokenize
+  if tokens.len == 0: return newMalNil()
+  var reader = Reader(tokens: tokens)
   return readForm(reader)

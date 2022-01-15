@@ -26,6 +26,7 @@ type
     Atom
 
   MalData* = ref object
+    metadata*: MalData
     case dataType*: MalDataType
       of List, Vector:
         items*: seq[MalData]
@@ -108,6 +109,16 @@ proc unorderedEquals*(a, b: OrderedTable): bool =
 
   return true
 
+proc softCopyLambda*(data: MalData): MalData =
+  result = MalData(
+    dataType: Lambda,
+    expression: data.expression,
+    fnBody: data.fnBody,
+    parameters: data.parameters,
+    replEnv: data.replEnv,
+    fnClosure: data.fnClosure,
+    isMacro: data.isMacro)
+
 proc `==`*(d1, d2: MalData): bool =
   if d1.dataType.isListLike and d2.dataType.isListLike:
     return d1.items == d2.items
@@ -135,6 +146,15 @@ proc newMalNil*(): MalData = MalData(dataType: Nil)
 
 proc toList*(items: seq[MalData]): MalData =
   MalData(dataType: List, items: items)
+
+proc toVector*(items: seq[MalData]): MalData =
+  MalData(dataType: Vector, items: items)
+
+proc isKeyword*(data: MalData): bool =
+  return data.dataType == String and data.str.len != 0 and $data.str[0] == KEYWORD_PREFIX
+
+proc isMalMacro*(data: MalData): bool =
+  data.dataType == Lambda and data.isMacro
 
 proc isSym*(data: MalData): bool =
   data.dataType == Symbol

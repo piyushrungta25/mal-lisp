@@ -1,51 +1,26 @@
 # mal
 
-Mal implementation following the [kanaka/mal](https://github.com/kanaka/mal/blob/master/process/guide.md#step-0-the-repl) guide.
+Mal Lisp intrepretor following the [kanaka/mal](https://github.com/kanaka/mal/blob/master/process/guide.md#step-0-the-repl) guide. Features [linenoise](https://github.com/antirez/linenoise/) integration, macros, tail call optimization, closures, quoting, try/catch, metadata etc. 
 
 ## Build/Run
 
-To build in debug mode
-```
-make build
-```
-compiler args can be set by passing the `nim-build-args` argument to make, for eg.
-```
-make nim-build-args='-d:release' build
-```
 
-To run the intrepretor
-```
-make run
-```
-or
-```
-make nim-build-args='-d:release' run
-```
 
-To run test for step N
+- Build in debug mode - `make build`
+- Build in release mode - `make build:release`
+- Pass compiler args - `make nim-build-args='--opt:speed' build`
+- Clean build cache and the binary - `make clean`
+- Run the interpretor - `make run`
+- Run with debug logging - `make run:debug`
+- Format code with `nimpretty` - `make format`
+- Run all tests - `make test`
+- Run self hosted tests - `make test:selfhosted`
+- Watch targets (requires [`entr`](https://eradman.com/entrproject/)) - `make watch` and `make watch:test`
 
-```
-make nim-build-args='-d:release' testN
-```
-
-Format the code with `nimpretty`
-```
-make format
-```
-
-To evalauate sample scripts
-```
-make build && ./mal sample/factorial.mal 1 2 3 4 5 6
-```
-The above should print something like `"(1 2 6 24 120 720)"`
-
-Use watch target `watch` and `watch:test` to run build or test on file change respectively. Requires [`entr`](https://eradman.com/entrproject/) to be installed.
-
-Set `LOGGING` environment to enable logging. Possible values - `debug`, `all`. Eg. `LOGGING=debug make run`
 
 ### Note on test suite
 
-The test suite and runner is copied unmodified from the [kanaka/mal](https://github.com/kanaka/mal/blob/master/process/guide.md#step-0-the-repl) repository.
+Everything under `tests` directory is copied unmodified from the [kanaka/mal](https://github.com/kanaka/mal/blob/master/process/guide.md#step-0-the-repl) repository.
 
 ### License
 
