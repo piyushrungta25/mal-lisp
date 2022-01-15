@@ -48,8 +48,7 @@ watch\:test:
 
 test: build
 	cd $(TESTS_DIR)
-	$(RUN_TEST_CMD) $(STEP_FILE_0) -- $(BIN_NAME)
-	$(RUN_TEST_CMD) $(STEP_FILE_1) -- $(BIN_NAME)
+	# step0 and step1 is not included since they expect the input to be not evaluated
 	$(RUN_TEST_CMD) $(STEP_FILE_2) -- $(BIN_NAME)
 	$(RUN_TEST_CMD) $(STEP_FILE_3) -- $(BIN_NAME)
 	$(RUN_TEST_CMD) $(STEP_FILE_4) -- $(BIN_NAME)
