@@ -4,6 +4,8 @@ import std/sequtils
 import std/strutils
 import std/sugar
 import std/sets
+import std/options
+import linenoise
 import stringUtils
 import reader
 import MalTypes
@@ -442,3 +444,11 @@ MalCoreFunction "assoc":
         i += 2
 
     return MalData(dataType: HashMap, map: map)
+
+
+MalCoreFunction "readline":
+  let prompt = args[0].str
+  let inputLine = getInputLine(prompt)
+  if inputLine.isNone: return newMalNil()
+  return inputLine.get.newString
+
