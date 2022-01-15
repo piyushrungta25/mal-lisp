@@ -5,7 +5,7 @@ import std/strutils
 import std/sugar
 import std/sets
 import std/options
-import std/monotimes
+import std/times
 import std/algorithm
 import linenoise
 import stringUtils
@@ -500,7 +500,7 @@ MalCoreFunction "conj":
 
 
 MalCoreFunction "time-ms":
-    return MalData(dataType: Digit, digit: getMonoTime().ticks.int) # safe since int == int64 on 64 bit systems
+    return MalData(dataType: Digit, digit: int(epochTime() * 1000))
 
 
 MalCoreFunction "meta":
