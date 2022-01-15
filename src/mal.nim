@@ -11,6 +11,8 @@ import MalTypes
 
 include logger
 
+const HOST_LANGUAGE = "Nim Lang"
+
 proc read(str: string): MalData =
   reader.readStr(str)
 
@@ -50,11 +52,16 @@ proc registerCmdArgs(prelude: var ReplEnv) =
     else: @[]
   prelude.set(newSymbol("*ARGV*"), MalData(dataType: List, items: items))
 
+proc registerConstants(prelude: var ReplEnv) =
+  # host language
+  prelude.set("*host-language*".newSymbol, HOST_LANGUAGE.newString)
+
 when isMainModule:
   var prelude = getPrelude()
   prelude.registerSelfHostedFunctions
   prelude.registerEval
   prelude.registerCmdArgs
+  prelude.registerConstants
 
 
   if commandLineParams().len > 0:
@@ -62,6 +69,7 @@ when isMainModule:
     echo rep(fmt"""(load-file "{programFileName}")""", prelude)
     quit()
 
+  echo rep("""(println (str "Mal [" *host-language* "]"))""", prelude)
 
 
   while true:
