@@ -447,8 +447,8 @@ MalCoreFunction "assoc":
 
 
 MalCoreFunction "readline":
-  let prompt = args[0].str
-  let inputLine = getInputLine(prompt)
-  if inputLine.isNone: return newMalNil()
-  return inputLine.get.newString
+    let prompt = args[0].str
+    let inputLine = getInputLine(prompt)
+    if inputLine.isNone: return newMalNil()
+    return inputLine.get.newString
 
