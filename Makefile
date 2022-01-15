@@ -6,6 +6,7 @@ TEST_RUNNER := $(ROOT_DIR)/tests/runtest.py
 TEST_PARAMS := --deferrable --optional
 CACHE_DIR := $(ROOT_DIR)/cache
 COPTS := --nimcache=$(CACHE_DIR)
+RELEASE_OPTS := -d:release $(COPTS)
 BIN_NAME := $(ROOT_DIR)/mal
 SRC_DIR := $(ROOT_DIR)/src
 NIM_SRCS := $(shell find $(SRC_DIR) -type f -iname "*.nim")
@@ -25,12 +26,22 @@ STEP_FILE_8 := step8_macros.mal
 STEP_FILE_9 := step9_try.mal
 STEP_FILE_A := stepA_mal.mal
 
+PERF_1 := perf1.mal
+PERF_2 := perf2.mal
+PERF_3 := perf3.mal
 
 build:
 	cd $(ROOT_DIR)
 	nimble build $(COPTS) $(nim-build-args)
 
-run: build
+build\:release:
+	cd $(ROOT_DIR)
+	nimble build $(RELEASE_OPTS) $(nim-build-args)
+
+run: build\:release
+	PERSIST_HISTORY=true $(BIN_NAME)
+
+run\:debug: build
 	LOGGING=debug PERSIST_HISTORY=true $(BIN_NAME)
 
 clean:
@@ -45,6 +56,11 @@ watch:
 watch\:test:
 	echo $(NIM_SRCS)| sed -e 's/ /\n/g' | entr -ccrd make test
 
+perf: build\:release
+	cd $(TESTS_DIR)
+	$(BIN_NAME) $(PERF_1)
+	$(BIN_NAME) $(PERF_2)
+	$(BIN_NAME) $(PERF_3)
 
 test: build
 	cd $(TESTS_DIR)
@@ -60,7 +76,7 @@ test: build
 	$(RUN_TEST_CMD) $(STEP_FILE_A) -- $(BIN_NAME)
 
 
-test\:selfhosted: build
+test\:selfhosted: build\:release
 	cd $(MAL_IMPL_DIR)
 	$(RUN_TEST_CMD) "$(TESTS_DIR)/$(STEP_FILE_0)" -- $(BIN_NAME) $(STEP_FILE_0)
 	$(RUN_TEST_CMD) "$(TESTS_DIR)/$(STEP_FILE_1)" -- $(BIN_NAME) $(STEP_FILE_1)
