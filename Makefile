@@ -17,6 +17,7 @@ TEST6 := tests/tests/step6_file.mal
 TEST7 := tests/tests/step7_quote.mal
 TEST8 := tests/tests/step8_macros.mal
 TEST9 := tests/tests/step9_try.mal
+TESTA := tests/tests/stepA_mal.mal
 
 build:
 	nimble build $(COPTS) $(nim-build-args)
@@ -37,7 +38,7 @@ watch\:test:
 	echo $(NIM_SRCS)| sed -e 's/ /\n/g' | entr -ccrd make test
 
 
-test: test9
+test: testA
 
 test0: build
 	$(PYTHON) $(TEST_RUNNER) $(TEST_PARAMS) $(TEST0) -- ./$(BIN_NAME)
@@ -68,4 +69,7 @@ test8: build
 
 test9: build
 	$(PYTHON) $(TEST_RUNNER) $(TEST_PARAMS) $(TEST9) -- ./$(BIN_NAME)
+
+testA: build
+	$(PYTHON) $(TEST_RUNNER) $(TEST_PARAMS) $(TESTA) -- ./$(BIN_NAME)
 
