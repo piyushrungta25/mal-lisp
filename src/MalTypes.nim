@@ -26,6 +26,7 @@ type
     Atom
 
   MalData* = ref object
+    metadata*: MalData
     case dataType*: MalDataType
       of List, Vector:
         items*: seq[MalData]
@@ -135,6 +136,15 @@ proc newMalNil*(): MalData = MalData(dataType: Nil)
 
 proc toList*(items: seq[MalData]): MalData =
   MalData(dataType: List, items: items)
+
+proc toVector*(items: seq[MalData]): MalData =
+  MalData(dataType: Vector, items: items)
+
+proc isKeyword*(data: MalData): bool =
+  return data.dataType == String and data.str.len != 0 and $data.str[0] == KEYWORD_PREFIX
+
+proc isMalMacro*(data: MalData): bool =
+  data.dataType == Lambda and data.isMacro
 
 proc isSym*(data: MalData): bool =
   data.dataType == Symbol

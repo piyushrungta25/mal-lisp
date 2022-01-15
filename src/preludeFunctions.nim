@@ -455,7 +455,7 @@ MalCoreFunction "readline":
 
 
 MalCoreFunction "string?":
-  return newMalBool(args[0].dataType == String)
+  return newMalBool(args[0].dataType == String and (not args[0].isKeyword))
 
 
 MalCoreFunction "number?":
@@ -463,11 +463,11 @@ MalCoreFunction "number?":
 
 
 MalCoreFunction "fn?":
-  return newMalBool(args[0].dataType.isCallable)
+  return newMalBool(args[0].dataType.isCallable and (not args[0].isMalMacro))
 
 
 MalCoreFunction "macro?":
-  return newMalBool(args[0].dataType == Lambda and args[0].isMacro)
+  return newMalBool(args[0].isMalMacro)
 
 
 MalCoreFunction "seq":
@@ -479,6 +479,8 @@ MalCoreFunction "seq":
   of String:
     if arg.str.len == 0: return newMalNil()
     return arg.str.mapIt(($it).newString).toList
+  of Nil:
+    return newMalNil()
   else:
       raise newException(ValueError, "wrong type to seq")
 
@@ -486,20 +488,45 @@ MalCoreFunction "seq":
 MalCoreFunction "conj":
   if args.len < 2:
     raise newException(ValueError, "not enough args to conj")
-  if not args[0].dataType.isListLike:
+
+  case args[0].dataType
+  of List:
+    var newList: seq[MalData]
+
+    for i in countdown(high(args), low(args)+1):
+      newList.add args[i]
+
+    for i in args[0].items:
+      newList.add i
+    return newList.toList
+  of Vector:
+    return toVector(args[0].items & args[1..^1])
+  else:
     raise newException(ValueError, "first argument to conj needs to to list/vector")
 
 
-  var newList: seq[MalData]
-
-  for i in countdown(high(args), low(args)+1):
-    newList.add args[i]
-
-  for i in args[0].items:
-    newList.add i
-
-  return newList.toList
-
 MalCoreFunction "time-ms":
   return MalData(dataType: Digit, digit: getMonoTime().ticks.int) # safe since int == int64 on 64 bit systems
+
+
+MalCoreFunction "meta":
+  case args[0].dataType:
+    of List, Vector, HashMap, Function, Lambda:
+      if args[0].metadata.isNil: return newMalNil()
+      return args[0].metadata
+    else:
+      raise newException(ValueError, fmt"metadata for support for {args[0].dataType}")
+
+
+MalCoreFunction "with-meta":
+  case args[0].dataType:
+    of List, Vector, HashMap, Function, Lambda:
+      if args.len > 1:
+        var newData = deepCopy(args[0])
+        newData.metadata = args[1]
+        return newData
+    else:
+      raise newException(ValueError, fmt"metadata for support for {args[0].dataType}")
+
+
 

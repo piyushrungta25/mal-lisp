@@ -56,16 +56,6 @@ proc registerConstants(prelude: var ReplEnv) =
   # host language
   prelude.set("*host-language*".newSymbol, HOST_LANGUAGE.newString)
 
-proc registerNotImplementedFns(prelude: var ReplEnv) =
-  let fnNames = [
-    "meta",
-    "with-meta",
-  ]
-
-
-  for fn in fnNames:
-    let stm = fmt"""(def! {fn} (fn* () (throw "not implemented")))"""
-    discard stm.rep(prelude)
 
 when isMainModule:
   var prelude = getPrelude()
@@ -73,7 +63,6 @@ when isMainModule:
   prelude.registerEval
   prelude.registerCmdArgs
   prelude.registerConstants
-  prelude.registerNotImplementedFns
 
 
   if commandLineParams().len > 0:
