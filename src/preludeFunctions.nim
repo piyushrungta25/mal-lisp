@@ -456,71 +456,73 @@ MalCoreFunction "readline":
 
 
 MalCoreFunction "string?":
-  return newMalBool(args[0].dataType == String and (not args[0].isKeyword))
+    return newMalBool(args[0].dataType == String and (not args[0].isKeyword))
 
 
 MalCoreFunction "number?":
-  return newMalBool(args[0].dataType == Digit)
+    return newMalBool(args[0].dataType == Digit)
 
 
 MalCoreFunction "fn?":
-  return newMalBool(args[0].dataType.isCallable and (not args[0].isMalMacro))
+    return newMalBool(args[0].dataType.isCallable and (not args[0].isMalMacro))
 
 
 MalCoreFunction "macro?":
-  return newMalBool(args[0].isMalMacro)
+    return newMalBool(args[0].isMalMacro)
 
 
 MalCoreFunction "seq":
-  let arg = args[0]
-  case arg.dataType
-  of List, Vector:
-    if arg.items.len == 0: return newMalNil()
-    return arg.items.toList
-  of String:
-    if arg.str.len == 0: return newMalNil()
-    return arg.str.mapIt(($it).newString).toList
-  of Nil:
-    return newMalNil()
-  else:
-      raise newException(ValueError, "wrong type to seq")
+    let arg = args[0]
+    case arg.dataType
+    of List, Vector:
+        if arg.items.len == 0: return newMalNil()
+        return arg.items.toList
+    of String:
+        if arg.str.len == 0: return newMalNil()
+        return arg.str.mapIt(($it).newString).toList
+    of Nil:
+        return newMalNil()
+    else:
+        raise newException(ValueError, "wrong type to seq")
 
 
 MalCoreFunction "conj":
-  if args.len < 2:
-    raise newException(ValueError, "not enough args to conj")
+    if args.len < 2:
+        raise newException(ValueError, "not enough args to conj")
 
-  case args[0].dataType
-  of List:
-    return toList(args[1..^1].reversed.concat args[0].items)
-  of Vector:
-    return toVector(args[0].items.concat args[1..^1])
-  else:
-    raise newException(ValueError, "first argument to conj needs to to list/vector")
+    case args[0].dataType
+    of List:
+        return toList(args[1..^1].reversed.concat args[0].items)
+    of Vector:
+        return toVector(args[0].items.concat args[1..^1])
+    else:
+        raise newException(ValueError, "first argument to conj needs to to list/vector")
 
 
 MalCoreFunction "time-ms":
-  return MalData(dataType: Digit, digit: getMonoTime().ticks.int) # safe since int == int64 on 64 bit systems
+    return MalData(dataType: Digit, digit: getMonoTime().ticks.int) # safe since int == int64 on 64 bit systems
 
 
 MalCoreFunction "meta":
-  case args[0].dataType:
-    of List, Vector, HashMap, Function, Lambda:
-      if args[0].metadata.isNil: return newMalNil()
-      return args[0].metadata
-    else:
-      raise newException(ValueError, fmt"metadata for support for {args[0].dataType}")
+    case args[0].dataType:
+        of List, Vector, HashMap, Function, Lambda:
+            if args[0].metadata.isNil: return newMalNil()
+            return args[0].metadata
+        else:
+            raise newException(ValueError,
+                    fmt"metadata for support for {args[0].dataType}")
 
 
 MalCoreFunction "with-meta":
-  case args[0].dataType:
-    of List, Vector, HashMap, Function, Lambda:
-      if args.len > 1:
-        var newData = deepCopy(args[0])
-        newData.metadata = args[1]
-        return newData
-    else:
-      raise newException(ValueError, fmt"metadata for support for {args[0].dataType}")
+    case args[0].dataType:
+        of List, Vector, HashMap, Function, Lambda:
+            if args.len > 1:
+                var newData = deepCopy(args[0])
+                newData.metadata = args[1]
+                return newData
+        else:
+            raise newException(ValueError,
+                    fmt"metadata for support for {args[0].dataType}")
 
 
 
