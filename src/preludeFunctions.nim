@@ -6,6 +6,7 @@ import std/sugar
 import std/sets
 import std/options
 import std/monotimes
+import std/algorithm
 import linenoise
 import stringUtils
 import reader
@@ -491,16 +492,9 @@ MalCoreFunction "conj":
 
   case args[0].dataType
   of List:
-    var newList: seq[MalData]
-
-    for i in countdown(high(args), low(args)+1):
-      newList.add args[i]
-
-    for i in args[0].items:
-      newList.add i
-    return newList.toList
+    return toList(args[1..^1].reversed.concat args[0].items)
   of Vector:
-    return toVector(args[0].items & args[1..^1])
+    return toVector(args[0].items.concat args[1..^1])
   else:
     raise newException(ValueError, "first argument to conj needs to to list/vector")
 
