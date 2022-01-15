@@ -57,8 +57,9 @@ proc applyDefMacro(args: seq[MalData], replEnv: var ReplEnv): MalData =
     raise newException(ValueError, fmt"malfolmed `defmacro!` expression." &
         "Expected `2` arguments, found `{args.len}`")
   result = eval(args[1], replEnv)
-  result = deepCopy(result)
+  result = result.softCopyLambda
   result.isMacro = true
+
   replEnv.set(args[0], result)
 
 

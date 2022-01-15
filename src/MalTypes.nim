@@ -109,6 +109,16 @@ proc unorderedEquals*(a, b: OrderedTable): bool =
 
   return true
 
+proc softCopyLambda*(data: MalData): MalData =
+  result = MalData(
+    dataType: Lambda,
+    expression: data.expression,
+    fnBody: data.fnBody,
+    parameters: data.parameters,
+    replEnv: data.replEnv,
+    fnClosure: data.fnClosure,
+    isMacro: data.isMacro)
+
 proc `==`*(d1, d2: MalData): bool =
   if d1.dataType.isListLike and d2.dataType.isListLike:
     return d1.items == d2.items
