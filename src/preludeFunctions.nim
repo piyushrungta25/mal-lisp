@@ -5,6 +5,7 @@ import std/strutils
 import std/sugar
 import std/sets
 import std/options
+import std/monotimes
 import linenoise
 import stringUtils
 import reader
@@ -452,6 +453,7 @@ MalCoreFunction "readline":
     if inputLine.isNone: return newMalNil()
     return inputLine.get.newString
 
+
 MalCoreFunction "string?":
   return newMalBool(args[0].dataType == String)
 
@@ -466,3 +468,38 @@ MalCoreFunction "fn?":
 
 MalCoreFunction "macro?":
   return newMalBool(args[0].dataType == Lambda and args[0].isMacro)
+
+
+MalCoreFunction "seq":
+  let arg = args[0]
+  case arg.dataType
+  of List, Vector:
+    if arg.items.len == 0: return newMalNil()
+    return arg.items.toList
+  of String:
+    if arg.str.len == 0: return newMalNil()
+    return arg.str.mapIt(($it).newString).toList
+  else:
+      raise newException(ValueError, "wrong type to seq")
+
+
+MalCoreFunction "conj":
+  if args.len < 2:
+    raise newException(ValueError, "not enough args to conj")
+  if not args[0].dataType.isListLike:
+    raise newException(ValueError, "first argument to conj needs to to list/vector")
+
+
+  var newList: seq[MalData]
+
+  for i in countdown(high(args), low(args)+1):
+    newList.add args[i]
+
+  for i in args[0].items:
+    newList.add i
+
+  return newList.toList
+
+MalCoreFunction "time-ms":
+  return MalData(dataType: Digit, digit: getMonoTime().ticks.int) # safe since int == int64 on 64 bit systems
+

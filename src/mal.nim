@@ -58,11 +58,8 @@ proc registerConstants(prelude: var ReplEnv) =
 
 proc registerNotImplementedFns(prelude: var ReplEnv) =
   let fnNames = [
-    "time-ms",
     "meta",
     "with-meta",
-    "seq",
-    "conj",
   ]
 
 
